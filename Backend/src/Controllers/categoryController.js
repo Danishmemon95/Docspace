@@ -1,4 +1,5 @@
 import Category from "../Models/categoryModel.js"
+import Note from "../Models/noteModel.js";
 
 const userCategory = async (req, res) => {
     try {
@@ -6,13 +7,34 @@ const userCategory = async (req, res) => {
         res.status(200).json({ success: true, data: categories });
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+}
+
+const getCategoryById = async (req, res) => {
+    try {
+        const category = await Category.findOne({ _id: req.params.id, userId: req.user._id });
+
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        const noteCount = await Note.countDocuments({
+            categoryId: category._id,
+            userId: req.user._id
+        })
+
+        res.status(200).json({ success: true, data: { ...category.toObject(), noteCount } });
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
 }
 
 const createCategory = async (req, res) => {
     try {
-        const { name, icon } = req.body;
+        const { name, icon, isDefault } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ message: "Category name is required" });
@@ -36,7 +58,7 @@ const createCategory = async (req, res) => {
             icon: icon || "folder",
             order: newOrder,
             userId: req.user._id,
-            isDefault: false
+            isDefault: isDefault || false
         });
 
         res.status(201).json({ success: true, message: 'Category created successfully', data: category });
@@ -132,12 +154,78 @@ const deleteCategory = async (req, res) => {
     }
 }
 
-// const reOrderCategory = async (req, res) => {
-//     try {
+const reOrderCategory = async (req, res) => {
+    try {
+        const { categoryOrders } = req.body;
 
-//     } catch (error) {
+        if (!Array.isArray(categoryOrders) || categoryOrders.length === 0) {
+            return res.status(400).json({ message: "Invalid category order data" });
+        }
 
-//     }
-// }
+        const categoryIds = categoryOrders.map(cat => cat.id);
 
-export { userCategory, createCategory, updateCategory, deleteCategory };
+        const categories = await Category.find({
+            _id: { $in: categoryIds },
+            userId: req.user._id
+        })
+
+        if (categories.length !== categoryIds.length) {
+            return res.status(400).json({ message: "One or more categories not found" });
+        }
+
+        const bulkOps = categoryOrders.map((item) => ({
+            updateOne: {
+                filter: { _id: item.id, userId: req.user._id },
+                update: { $set: { order: item.order, updatedAt: Date.now() } }
+            }
+        }));
+
+        await Category.bulkWrite(bulkOps);
+
+        const updatedCategories = await Category.find({
+            userId: req.user._id
+        }).sort({ order: 1 });
+
+        res.status(200).json({ success: true, message: "Categories reordered successfully", data: updatedCategories });
+
+    } catch (error) {
+        console.error('Error Reordering category:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while reordering category',
+            error: error.message
+        })
+    }
+}
+
+const categoryWithNotes = async (req, res) => {
+    try {
+        const categories = await Category.find({ userId: req.user._id }).sort({ order: 1 });
+
+        const notes = await Note.find({ userId: req.user._id }).sort({ order: 1 }).select('-content-__v').lean();
+
+        const categoriesWithNotes = categories.map(category => {
+            const categoryNotes = notes.filter(
+                note => note.categoryId.toString() === category._id.toString()
+            );
+
+            return {
+                _id: category._id,
+                category_name: category.category_name,
+                icon: category.icon,
+                order: category.order,
+                isDefault: category.isDefault,
+                notes: categoryNotes,
+                noteCount: categoryNotes.length,
+            };
+        })
+
+        res.status(200).json({ success: true, message: "Categories with notes retrieved successfully", data: categoriesWithNotes })
+
+    } catch (error) {
+        console.error('Error fetching categories with notes:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching categories with notes', error: error.message })
+    }
+}
+
+export { userCategory, createCategory, updateCategory, deleteCategory, reOrderCategory, getCategoryById, categoryWithNotes };
