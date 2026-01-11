@@ -41,19 +41,11 @@ const App = () => {
           <Routes>
             <Route
               path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><Index /></ProtectedRoute>}
             />
             <Route
               path="/auth"
-              element={
-                <AuthRoute>
-                  <Auth />
-                </AuthRoute>
-              }
+              element={<AuthRoute><Auth /></AuthRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

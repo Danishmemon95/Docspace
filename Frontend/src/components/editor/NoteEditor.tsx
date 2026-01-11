@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNotesStore } from '@/stores/notesStore';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView, darkDefaultTheme, lightDefaultTheme } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import "@blocknote/core/fonts/inter.css";
 import { FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { useNotesStore } from '../../stores/notesStore';
+import { Input } from '../ui/input';
+import { useTheme } from '../../hooks/useTheme';
 
 export function NoteEditor() {
   const { notes, selectedNoteId, updateNote } = useNotesStore();
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const theme = useTheme()
+
+  const editor = useCreateBlockNote();
 
   const selectedNote = useMemo(
     () => notes.find((n) => n.id === selectedNoteId),
@@ -18,13 +24,6 @@ export function NoteEditor() {
   useEffect(() => {
     if (selectedNote) {
       setTitle(selectedNote.title);
-      const textContent = selectedNote.content?.map((block: any) => {
-        if (block.content?.[0]?.text) {
-          return block.content[0].text;
-        }
-        return '';
-      }).join('\n') || '';
-      setContent(textContent);
     }
   }, [selectedNote]);
 
@@ -34,21 +33,6 @@ export function NoteEditor() {
       setTitle(newTitle);
       if (selectedNoteId) {
         updateNote(selectedNoteId, { title: newTitle });
-      }
-    },
-    [selectedNoteId, updateNote]
-  );
-
-  const handleContentChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newContent = e.target.value;
-      setContent(newContent);
-      if (selectedNoteId) {
-        const blocks = newContent.split('\n').map(line => ({
-          type: 'paragraph',
-          content: [{ type: 'text', text: line, styles: {} }]
-        }));
-        updateNote(selectedNoteId, { content: blocks });
       }
     },
     [selectedNoteId, updateNote]
@@ -88,12 +72,16 @@ export function NoteEditor() {
       {/* Editor */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="px-12 py-8">
-          <Textarea
+
+          {/* <Textarea
             value={content}
             onChange={handleContentChange}
             placeholder="Start writing..."
             className="w-full min-h-[calc(100vh-280px)] resize-none border-none shadow-none focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground/40 text-base leading-relaxed"
-          />
+          /> */}
+
+          <BlockNoteView editor={editor} theme={theme.theme === "dark" ? darkDefaultTheme : lightDefaultTheme} />
+
         </div>
       </div>
     </div>
