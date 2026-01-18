@@ -34,10 +34,10 @@ export const useAuthStore = create<User>()(
                     const response = await axiosInstance.post("/auth/login", { email, password })
                     set({ authUser: response.data.data, isAuthenticated: true });
                     console.log("response", response)
-                    toast({ title: "Login successful", status: "success" });
+                    toast({ title: "Login successful" });
                     return { success: true };
                 } catch (error: any) {
-                    toast({ title: "Login failed", description: error.response?.data?.message || error.message, status: "error" });
+                    toast({ title: "Login failed", description: error.response?.data?.message || error.message });
                     return { success: false, error: error.response?.data?.message || error.message };
                 } finally {
                     set({ isLoggingin: false });
@@ -49,10 +49,10 @@ export const useAuthStore = create<User>()(
                     set({ isSigningup: true });
                     const response = await axiosInstance.post("/auth/signup", { name, email, password });
                     set({ authUser: response.data, isAuthenticated: true });
-                    toast({ title: "Signup successful", status: "success" });
+                    toast({ title: "Signup successful" });
                     return { success: true };
                 } catch (error: any) {
-                    toast({ title: "Signup failed", description: error.response?.data?.message || error.message, status: "error" });
+                    toast({ title: "Signup failed", description: error.response?.data?.message || error.message });
                     return { success: false, error: error.response?.data?.message || error.message };
                 } finally {
                     set({ isSigningup: false });
@@ -64,7 +64,7 @@ export const useAuthStore = create<User>()(
                     await axiosInstance.post("/auth/logout");
                     set({ authUser: null, isAuthenticated: false });
                 } catch (error) {
-                    toast({ title: "Logout failed", status: "error" });
+                    toast({ title: "Logout failed" });
                 }
             },
 

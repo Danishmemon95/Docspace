@@ -7,7 +7,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -22,7 +21,6 @@ import {
   PanelLeft,
   Plus,
   Settings,
-  Archive,
   Pin,
   Inbox,
   Sparkles,
@@ -32,7 +30,7 @@ import { useAuthStore } from '../../stores/newAuthStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Button } from '../ui/button';
 import { cn } from '../../libs/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { SidebarCategoryItem } from '../sidebar/SidebarCategoryItem';
 import { AddCategoryDialog } from '../categories/AddCategoryDialog';
 import { SettingsDialog } from '../settings/SettingsDialog';
