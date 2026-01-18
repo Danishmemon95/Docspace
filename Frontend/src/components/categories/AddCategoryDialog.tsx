@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNotesStore } from '../../stores/notesStore';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { cn } from '../../libs/utils';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
+import { useCategoryStore } from '../../stores/categoryStore';
 
 interface AddCategoryDialogProps {
   open: boolean;
@@ -23,14 +23,14 @@ const COLORS = [
 ];
 
 export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
-  const { addCategory } = useNotesStore();
+  const { createCategory } = useCategoryStore()
   const [name, setName] = useState('');
   const [color, setColor] = useState('blue');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      addCategory(name.trim(), color);
+      createCategory(name.trim(), color);
       setName('');
       setColor('blue');
       onOpenChange(false);

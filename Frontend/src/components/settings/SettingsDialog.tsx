@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotesStore, type ThemeMode } from '../../stores/notesStore';
+import { useNotesStore, type ThemeMode } from '../../stores/categoryStore';
 import { Camera, Check, LogOut, Monitor, Moon, Palette, Sun, User } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/newAuthStore';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -26,16 +26,16 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun; descri
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const navigate = useNavigate();
-  const { profile, updateProfile } = useNotesStore();
-  const { logout, isAuthenticated } = useAuthStore();
+  // const { updateProfile } = useNotesStore();
+  const { logout, isAuthenticated, authUser } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  
-  const [name, setName] = useState(profile.name);
-  const [email, setEmail] = useState(profile.email);
+
+  const [name, setName] = useState(authUser?.name);
+  const [email, setEmail] = useState(authUser?.email);
 
   const handleSaveProfile = () => {
-    updateProfile({ name, email });
+    // updateProfile({ name, email });
     toast({ title: 'Profile updated', description: 'Your changes have been saved' });
   };
 
@@ -52,19 +52,19 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
         </DialogHeader>
-        
+
         <Tabs defaultValue="profile" className="w-full">
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-2 p-1 bg-muted rounded-xl h-11">
-              <TabsTrigger 
-                value="profile" 
+              <TabsTrigger
+                value="profile"
                 className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
               >
                 <User className="w-4 h-4" />
                 Profile
               </TabsTrigger>
-              <TabsTrigger 
-                value="appearance" 
+              <TabsTrigger
+                value="appearance"
                 className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
               >
                 <Palette className="w-4 h-4" />
@@ -72,14 +72,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="profile" className="mt-0 p-6 pt-6 space-y-6 animate-fade-in">
             {/* Avatar section */}
             <div className="flex items-center gap-5">
               <Avatar className="h-20 w-20 ring-4 ring-muted">
-                <AvatarImage src={profile.avatar} />
+                {/* <AvatarImage src={authUser?.avatar} /> */}
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                  {profile.name.charAt(0).toUpperCase()}
+                  {authUser?.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
@@ -92,7 +92,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </p>
               </div>
             </div>
-            
+
             {/* Form fields */}
             <div className="space-y-4">
               <div className="space-y-2">
@@ -105,7 +105,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   className="h-11 rounded-xl"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="profile-email" className="text-foreground font-medium">Email</Label>
                 <Input
@@ -118,16 +118,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 />
               </div>
             </div>
-            
-            <Button onClick={handleSaveProfile} className="w-full h-11 rounded-xl font-semibold">
+
+            {/* <Button onClick={handleSaveProfile} className="w-full h-11 rounded-xl font-semibold">
               Save Changes
-            </Button>
+            </Button> */}
 
             {/* Logout section */}
             {isAuthenticated && (
               <div className="pt-4 border-t border-border">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={handleLogout}
                   className="w-full h-11 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 font-medium"
                 >
@@ -137,7 +137,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="appearance" className="mt-0 p-6 pt-6 space-y-6 animate-fade-in">
             <div className="space-y-4">
               <div>
@@ -146,12 +146,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   Choose your preferred color scheme
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-3 gap-3">
                 {THEME_OPTIONS.map((option) => {
                   const Icon = option.icon;
                   const isActive = theme === option.value;
-                  
+
                   return (
                     <button
                       key={option.value}

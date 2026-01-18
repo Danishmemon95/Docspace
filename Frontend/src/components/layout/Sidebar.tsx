@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -28,8 +28,7 @@ import {
   Sparkles,
   FileText,
 } from 'lucide-react';
-import { useNotesStore, type Note } from '../../stores/notesStore';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/newAuthStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Button } from '../ui/button';
 import { cn } from '../../libs/utils';
@@ -37,30 +36,23 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { SidebarCategoryItem } from '../sidebar/SidebarCategoryItem';
 import { AddCategoryDialog } from '../categories/AddCategoryDialog';
 import { SettingsDialog } from '../settings/SettingsDialog';
+import { useCategoryStore, useNotesStore as notesStore } from '../../stores/categoryStore';
 
 export function Sidebar() {
-  const {
-    sidebarCollapsed,
-    toggleSidebar,
-    profile,
-    selectedCategoryId,
-    setSelectedCategory,
-    notes,
-    categories,
-    reorderCategories,
-    reorderNotes,
-    moveNote,
-  } = useNotesStore();
 
-  const { user } = useAuthStore();
+  const { sidebarCollapsed, toggleSidebar, selectedCategoryId, setSelectedCategory, moveNote, reorderNotes } = notesStore();
+
+  const { authUser: user } = useAuthStore();
+
+  const { categories: category, getCategory, reorderCategories } = useCategoryStore();
+
+  useEffect(() => {
+    getCategory();
+  }, [getCategory]);
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [activeNote, setActiveNote] = useState<Note | null>(null);
-
-  const pinnedCount = notes.filter((n) => n.pinned && !n.archived).length;
-  const archivedCount = notes.filter((n) => n.archived).length;
-  const allNotesCount = notes.filter((n) => !n.archived).length;
+  const [activeNote, setActiveNote] = useState<any | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -73,38 +65,21 @@ export function Sidebar() {
     })
   );
 
+  // Collect all notes from categories instead of global notes
+  const allNotes = category.flatMap(c => c.notes);
+
+  const pinnedCount = allNotes.filter((n) => n.pinned).length;
+  const allNotesCount = allNotes.length;
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
+
+    console.log("drag start active", active)
+
     const activeData = active.data.current;
 
     if (activeData?.type === 'note') {
       setActiveNote(activeData.note);
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    // Only handle note dragging for cross-category
-    if (activeData?.type !== 'note') return;
-
-    const activeNote = activeData.note as Note;
-    let targetCategoryId: string | null = null;
-
-    // Determine target category
-    if (overData?.type === 'note') {
-      targetCategoryId = (overData.note as Note).categoryId;
-    } else if (overData?.type === 'category') {
-      targetCategoryId = overData.category.id;
-    }
-
-    // Move note to new category if different
-    if (targetCategoryId && activeNote.categoryId !== targetCategoryId) {
-      moveNote(activeNote.id, targetCategoryId);
     }
   };
 
@@ -119,52 +94,71 @@ export function Sidebar() {
 
     // Handle category reordering
     if (activeData?.type === 'category' && overData?.type === 'category') {
-      const oldIndex = categories.findIndex((cat) => cat.id === active.id);
-      const newIndex = categories.findIndex((cat) => cat.id === over.id);
+      const oldIndex = category.findIndex((cat) => cat._id === active.id);
+      const newIndex = category.findIndex((cat) => cat._id === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newCategories = arrayMove(categories, oldIndex, newIndex).map(
+        const newCategories = arrayMove(category, oldIndex, newIndex).map(
           (cat, index) => ({ ...cat, order: index })
         );
         reorderCategories(newCategories);
+        getCategory();
       }
       return;
     }
 
-    // Handle note reordering within same category
-    if (activeData?.type === 'note' && overData?.type === 'note') {
-      const activeNote = activeData.note as Note;
-      const overNote = overData.note as Note;
+    // Handle note operations
+    if (activeData?.type === 'note') {
+      const activeNote = activeData.note;
+      let targetCategoryId: string | null = null;
 
-      if (activeNote.categoryId === overNote.categoryId) {
-        const categoryNotes = notes.filter(
-          (n) => n.categoryId === activeNote.categoryId && !n.archived
+      // Determine target category from over data
+      if (overData?.type === 'note') {
+        targetCategoryId = overData.note.categoryId;
+      } else if (overData?.type === 'category') {
+        targetCategoryId = overData.category._id;
+      }
+
+      // If dropping on a different category, move the note
+      if (targetCategoryId && activeNote.categoryId !== targetCategoryId) {
+        moveNote(activeNote._id, targetCategoryId);
+        getCategory();
+        return;
+      }
+
+      // If same category and over another note, reorder within category
+      if (overData?.type === 'note' && activeNote.categoryId === targetCategoryId) {
+        const categoryNotes = allNotes.filter(
+          (n) => n.categoryId === activeNote.categoryId
         );
-        const oldIndex = categoryNotes.findIndex((n) => n.id === active.id);
-        const newIndex = categoryNotes.findIndex((n) => n.id === over.id);
+        const oldIndex = categoryNotes.findIndex((n) => n._id === active.id);
+        const newIndex = categoryNotes.findIndex((n) => n._id === over.id);
 
         if (oldIndex !== -1 && newIndex !== -1) {
           const newCategoryNotes = arrayMove(categoryNotes, oldIndex, newIndex);
-          const otherNotes = notes.filter(
-            (n) => n.categoryId !== activeNote.categoryId || n.archived
-          );
-          reorderNotes([...newCategoryNotes, ...otherNotes]);
+          const reorderedNotes = newCategoryNotes.map((note, index) => ({
+            _id: note._id,
+            order: index
+          }));
+          reorderNotes(reorderedNotes);
+          getCategory();
         }
       }
     }
   };
 
-  const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
-  const displayName = user?.name || profile.name;
-  const displayEmail = user?.email || profile.email;
+
+  const sortedCategories = [...category].sort((a, b) => a.order - b.order);
+  const displayName = user?.name;
+  const displayEmail = user?.email;
 
   // Get all note IDs for the sortable context
-  const allNoteIds = notes.filter((n) => !n.archived).map((n) => n.id);
+  const allNoteIds = allNotes.map((n) => n._id);
 
   const quickFilters = [
     { id: null, label: 'All Notes', icon: Inbox, count: allNotesCount },
     { id: 'pinned', label: 'Pinned', icon: Pin, count: pinnedCount },
-    { id: 'archived', label: 'Archived', icon: Archive, count: archivedCount },
+    // { id: 'archived', label: 'Archived', icon: Archive, count: archivedCount },
   ];
 
   return (
@@ -267,16 +261,15 @@ export function Sidebar() {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={[...sortedCategories.map((c) => c.id), ...allNoteIds]}
+              items={[...sortedCategories.map((c) => c._id), ...allNoteIds]}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-0.5">
-                {sortedCategories.map((category) => (
-                  <SidebarCategoryItem key={category.id} category={category} />
+                {sortedCategories.map((categoryy) => (
+                  <SidebarCategoryItem key={categoryy._id} category={categoryy} />
                 ))}
               </div>
             </SortableContext>
@@ -292,7 +285,7 @@ export function Sidebar() {
             </DragOverlay>
           </DndContext>
 
-          {categories.length === 0 && (
+          {category.length === 0 && (
             <div className="px-4 py-8 text-center">
               <p className="text-sm text-muted-foreground">No categories yet</p>
               <Button
@@ -315,9 +308,9 @@ export function Sidebar() {
             className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-sidebar-accent transition-all group"
           >
             <Avatar className="h-9 w-9 ring-2 ring-sidebar-border group-hover:ring-primary/20 transition-all">
-              <AvatarImage src={profile.avatar} />
+              {/* <AvatarImage src={profile.avatar} /> */}
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                {displayName.charAt(0).toUpperCase()}
+                {displayName?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 text-left min-w-0">

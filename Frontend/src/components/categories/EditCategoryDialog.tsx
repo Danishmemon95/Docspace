@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNotesStore, type Category } from '../../stores/notesStore';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { cn } from '../../libs/utils';
 import { Button } from '../ui/button';
+import { useCategoryStore } from '../../stores/categoryStore';
 
 
 interface EditCategoryDialogProps {
-  category: Category;
+  category: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -29,7 +29,7 @@ export function EditCategoryDialog({
   open,
   onOpenChange,
 }: EditCategoryDialogProps) {
-  const { updateCategory } = useNotesStore();
+  const { updateCategory } = useCategoryStore()
   const [name, setName] = useState(category.name);
   const [color, setColor] = useState(category.color);
 
@@ -43,7 +43,7 @@ export function EditCategoryDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      updateCategory(category.id, { name: name.trim(), color });
+      updateCategory(category.id, name.trim(), color);
       onOpenChange(false);
     }
   };
@@ -90,7 +90,7 @@ export function EditCategoryDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim()}>
+            <Button type="submit" disabled={!name?.trim()}>
               Save
             </Button>
           </DialogFooter>

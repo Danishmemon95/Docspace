@@ -5,7 +5,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { ArrowRight, Loader2, Sparkles, Zap, Shield, Layers, PenTool, FolderOpen } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../stores/newAuthStore';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -172,8 +172,8 @@ export default function Auth() {
                 key={idx}
                 onClick={() => setActiveFeature(idx)}
                 className={`h-1.5 rounded-full transition-all duration-500 ${idx === activeFeature
-                    ? 'w-8 bg-background'
-                    : 'w-1.5 bg-background/30 hover:bg-background/50'
+                  ? 'w-8 bg-background'
+                  : 'w-1.5 bg-background/30 hover:bg-background/50'
                   }`}
               />
             ))}
@@ -191,10 +191,10 @@ export default function Auth() {
                 <div
                   key={idx}
                   className={`absolute inset-0 transition-all duration-700 ease-out ${isActive
-                      ? 'opacity-100 translate-y-0 scale-100'
-                      : isPrev
-                        ? 'opacity-0 -translate-y-8 scale-95 pointer-events-none'
-                        : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
+                    ? 'opacity-100 translate-y-0 scale-100'
+                    : isPrev
+                      ? 'opacity-0 -translate-y-8 scale-95 pointer-events-none'
+                      : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
                     }`}
                 >
                   <div className="bg-background/10 backdrop-blur-sm border border-background/10 rounded-2xl p-8">

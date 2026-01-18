@@ -29,7 +29,7 @@ const noteSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
-});
+}, { timestamps: true });
 
 const Note = mongoose.model("Note", noteSchema);
 

@@ -53,7 +53,7 @@ const createNote = async (req, res) => {
 
 const updateNote = async (req, res) => {
     try {
-        const { title, categoryId, content } = req.body;
+        const { title, content } = req.body;
 
         const note = await Note.findOne({ _id: req.params.id, userId: req.user._id });
         if (!note) {
@@ -65,14 +65,6 @@ const updateNote = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Title length should be less than 200 characters" });
             }
             note.title = title.trim() || "Untitled Note";
-        }
-
-        if (categoryId !== undefined) {
-            const category = await Category.findOne({ _id: categoryId, userId: req.user._id });
-            if (!category) {
-                return res.status(404).json({ success: false, message: "Category not found" });
-            }
-            note.categoryId = categoryId;
         }
 
         if (content !== undefined) {
@@ -191,7 +183,7 @@ const reorderNotes = async (req, res) => {
         const bulkOps = orderedNoteIds.map(({ id, order }) => ({
             updateOne: {
                 filter: { _id: id, userId: req.user._id },
-                update: { $set: { order: item.order, updatedAt: Date.now() } }
+                update: { $set: { order: order, updatedAt: Date.now() } }
             }
         }));
 

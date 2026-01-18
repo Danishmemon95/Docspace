@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -24,13 +24,15 @@ import {
 } from "../../components/ui/alert-dialog";
 import { EditCategoryDialog } from '../../components/categories/EditCategoryDialog';
 import { SidebarNoteItem } from './SidebarNoteItem';
-import { useNotesStore, type Category } from '../../stores/notesStore';
 import { cn } from '../../libs/utils';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { useCategoryStore } from '../../stores/categoryStore';
+import { useNotesStore } from '../../stores/categoryStore';
+import { Input } from '../ui/input';
 
 interface SidebarCategoryItemProps {
-  category: Category;
+  category: any;
 }
 
 const colorClasses: Record<string, string> = {
@@ -45,10 +47,15 @@ const colorClasses: Record<string, string> = {
 };
 
 export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
-  const { notes, deleteCategory, addNote } = useNotesStore();
+  const { createNote } = useNotesStore();
+  const { deleteCategory, getCategory } = useCategoryStore()
+  useNotesStore()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const [newNoteTitle, setNewNoteTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     attributes,
@@ -57,8 +64,8 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
-    id: category.id,
+  } = useSortable({
+    id: category._id,
     data: {
       type: 'category',
       category,
@@ -70,22 +77,51 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
     transition,
   };
 
-  const categoryNotes = notes.filter(
-    (n) => n.categoryId === category.id && !n.archived
-  );
-
-  const isUncategorized = category.id === 'uncategorized';
+  const isUncategorized = category.category_name === "Uncategorised";
 
   const handleDelete = () => {
-    deleteCategory(category.id);
+    deleteCategory(category._id);
     setShowDeleteDialog(false);
+    getCategory();
   };
 
   const handleAddNote = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addNote(category.id);
+    setIsCreatingNote(true);
+    setNewNoteTitle('');
     setIsExpanded(true);
   };
+
+  const handleCreateNote = () => {
+    const title = newNoteTitle.trim() || 'Untitled';
+    createNote(title, category._id);
+    setIsCreatingNote(false);
+    setNewNoteTitle('');
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCreateNote();
+    } else if (e.key === 'Escape') {
+      setIsCreatingNote(false);
+      setNewNoteTitle('');
+    }
+  };
+
+  const handleInputBlur = () => {
+    setTimeout(() => {
+      if (isCreatingNote) {
+        handleCreateNote();
+      }
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (isCreatingNote && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isCreatingNote]);
 
   return (
     <>
@@ -109,7 +145,7 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
           >
             <GripVertical className="w-3.5 h-3.5" />
           </button>
-          
+
           <button
             className="p-0.5 hover:bg-sidebar-accent rounded shrink-0"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -126,9 +162,9 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
           ) : (
             <Folder className={cn("w-4 h-4 shrink-0", colorClasses[category.color])} />
           )}
-          
+
           <span className="flex-1 text-sm font-medium text-sidebar-foreground truncate">
-            {category.name}
+            {category.category_name}
           </span>
 
           <Button
@@ -172,11 +208,24 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
         {/* Notes list - droppable area */}
         {isExpanded && (
           <div className="mt-0.5 space-y-0.5">
-            {categoryNotes.map((note) => (
-              <SidebarNoteItem key={note.id} note={note} />
+            {isCreatingNote && (
+              <div className="ml-8 px-1 py-0.5">
+                <Input
+                  ref={inputRef}
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  onBlur={handleInputBlur}
+                  placeholder="Enter note title..."
+                  className="h-7 text-sm bg-sidebar-accent border-primary/30 focus-visible:ring-primary/20"
+                />
+              </div>
+            )}
+            {category.notes?.map((note: any) => (
+              <SidebarNoteItem key={note._id} note={note} />
             ))}
-            
-            {categoryNotes.length === 0 && (
+
+            {category.notes?.length === 0 && !isCreatingNote && (
               <div className="ml-8 px-3 py-1.5 text-xs text-muted-foreground/60 italic">
                 No notes
               </div>
@@ -190,7 +239,7 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{category.name}"? All notes in this
+              Are you sure you want to delete "{category.category_name}"? All notes in this
               category will be moved to Uncategorized.
             </AlertDialogDescription>
           </AlertDialogHeader>
