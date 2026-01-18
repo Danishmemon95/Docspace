@@ -9,6 +9,7 @@ import noteRoutes from "./Routes/noteRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
+const __dirname = path.resolve();
 
 const app = express();
 
@@ -24,6 +25,14 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/note", noteRoutes);
 app.use("/api/category", categoryRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../FrontEnd/dist")));
+
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, "../FrontEnd/dist", "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
