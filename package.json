@@ -4,7 +4,7 @@
   "description": "\"# Docspace\"",
   "main": "index.js",
   "scripts": {
-    "build": "npm install --prefix Backend && npm install --force --prefix Frontend && npm run build --prefix Frontend",
+    "build": "npm install --prefix Backend && npm install --legacy-peer-deps --include=optional --prefix Frontend && npm run build --prefix Frontend",
     "start": "npm run start --prefix Backend"
   },
   "keywords": [],
