@@ -5,20 +5,22 @@ import { debounce } from 'lodash';
 import { BlockNoteView, darkDefaultTheme, lightDefaultTheme } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import "@blocknote/core/fonts/inter.css";
-import { Clock, Copy, Download, FileText, FolderOpen, MoreHorizontal, Pin, PinOff, Trash2 } from 'lucide-react';
+import { Clock, Copy, Download, FileText, MoreHorizontal, Pin, PinOff } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Input } from '../ui/input';
 import { useTheme } from '../../hooks/useTheme';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+// import { DropdownMenuContent, DropdownMenuItem, } from '@radix-ui/react-dropdown-menu';
 import { Button } from '../ui/button';
-import { DropdownMenuSeparator } from '../ui/dropdown-menu';
+// import { DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
 import { useCategoryStore } from '../../stores/categoryStore';
 import { useNotesStore } from '../../stores/categoryStore';
 
 export function NoteEditor() {
   const { categories } = useCategoryStore()
-  const { selectedNoteId, updateNote, duplicateNote, deleteNote, getById, noteById } = useNotesStore()
+  const { selectedNoteId, updateNote, duplicateNote, getById, noteById } = useNotesStore()
+
   const [title, setTitle] = useState('');
   const [isTitleFocused, setIsTitleFocused] = useState(false);
 
@@ -97,11 +99,11 @@ export function NoteEditor() {
     console.log('Export to PDF');
   }, []);
 
-  const handleDelete = useCallback(() => {
-    if (selectedNoteId) {
-      deleteNote(selectedNoteId);
-    }
-  }, [selectedNoteId, deleteNote]);
+  // const handleDelete = useCallback(() => {
+  //   if (selectedNoteId) {
+  //     deleteNote(selectedNoteId);
+  //   }
+  // }, [selectedNoteId, deleteNote]);
 
   useEffect(() => {
     if (selectedNote) {

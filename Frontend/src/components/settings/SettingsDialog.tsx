@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotesStore, type ThemeMode } from '../../stores/categoryStore';
+import { type ThemeMode } from '../../stores/categoryStore';
 import { Camera, Check, LogOut, Monitor, Moon, Palette, Sun, User } from 'lucide-react';
 import { useAuthStore } from '../../stores/newAuthStore';
 import { useTheme } from '../../hooks/useTheme';
 import { useToast } from '../ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -34,10 +34,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [name, setName] = useState(authUser?.name);
   const [email, setEmail] = useState(authUser?.email);
 
-  const handleSaveProfile = () => {
-    // updateProfile({ name, email });
-    toast({ title: 'Profile updated', description: 'Your changes have been saved' });
-  };
+  // const handleSaveProfile = () => {
+  //   // updateProfile({ name, email });
+  //   toast({ title: 'Profile updated', description: 'Your changes have been saved' });
+  // };
 
   const handleLogout = () => {
     logout();
