@@ -28,10 +28,10 @@ app.use("/api/note", noteRoutes);
 app.use("/api/category", categoryRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../FrontEnd/dist")));
+  app.use(express.static(path.join(__dirname, "../Frontend/dist")));
 
   app.get(/^\/(?!api).*/, (req, res) => {
-    res.sendFile(path.join(__dirname, "../FrontEnd/dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../Frontend/dist", "index.html"));
   });
 }
 
