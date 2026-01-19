@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./Routes/authRoutes.js";
 import categoryRoutes from "./Routes/categoryRoutes.js";
 import noteRoutes from "./Routes/noteRoutes.js";
+import path from "path";
 
 dotenv.config();
 const PORT = process.env.PORT;
