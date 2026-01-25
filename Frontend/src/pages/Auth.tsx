@@ -6,6 +6,7 @@ import { Label } from '../components/ui/label';
 import { ArrowRight, Loader2, Sparkles, Zap, Shield, Layers, PenTool, FolderOpen } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 import { useAuthStore } from '../stores/newAuthStore';
+import noteIcon from "../../public/docspaceicon.png"
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -84,10 +85,8 @@ export default function Auth() {
         <div className="w-full max-w-[380px]">
           <div className="mb-10">
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-                <span className="text-background font-semibold text-sm">N</span>
-              </div>
-              <span className="text-xl font-semibold tracking-tight">Notely</span>
+              <img src={noteIcon} alt="" style={{ height: "30px", width: "30px" }} />
+              <span className="text-xl font-semibold tracking-tight">DocSpace</span>
             </div>
           </div>
 
