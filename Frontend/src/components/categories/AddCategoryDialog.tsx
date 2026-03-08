@@ -1,38 +1,27 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { cn } from '../../libs/utils';
 import { Button } from '../ui/button';
-import { Label } from '../ui/label';
 import { useCategoryStore } from '../../stores/categoryStore';
+import { IconPicker } from './IconPicker';
+import { Label } from '../ui/label';
 
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const COLORS = [
-  { name: 'gray', class: 'bg-note-gray' },
-  { name: 'red', class: 'bg-note-red' },
-  { name: 'orange', class: 'bg-note-orange' },
-  { name: 'yellow', class: 'bg-note-yellow' },
-  { name: 'green', class: 'bg-note-green' },
-  { name: 'blue', class: 'bg-note-blue' },
-  { name: 'purple', class: 'bg-note-purple' },
-  { name: 'pink', class: 'bg-note-pink' },
-];
-
 export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
   const { createCategory } = useCategoryStore()
   const [name, setName] = useState('');
-  const [color, setColor] = useState('blue');
+  const [icon, setIcon] = useState('mdi:folder-outline');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      createCategory(name.trim(), color);
+      createCategory(name.trim(), icon);
       setName('');
-      setColor('blue');
+      setIcon('mdi:folder-outline');
       onOpenChange(false);
     }
   };
@@ -47,31 +36,16 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Category name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Color</Label>
-              <div className="flex gap-2">
-                {COLORS.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => setColor(c.name)}
-                    className={cn(
-                      "w-8 h-8 rounded-full transition-all",
-                      c.class,
-                      color === c.name
-                        ? "ring-2 ring-offset-2 ring-primary"
-                        : "hover:scale-110"
-                    )}
-                  />
-                ))}
+              <div className="flex gap-2 items-center">
+                <IconPicker value={icon} onChange={setIcon} />
+                <Input
+                  id="name"
+                  placeholder="Category name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoFocus
+                  className="flex-1"
+                />
               </div>
             </div>
           </div>

@@ -34,6 +34,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [name, setName] = useState(authUser?.name);
   const [email, setEmail] = useState(authUser?.email);
 
+  console.log("auth User", authUser)
+
   // const handleSaveProfile = () => {
   //   // updateProfile({ name, email });
   //   toast({ title: 'Profile updated', description: 'Your changes have been saved' });

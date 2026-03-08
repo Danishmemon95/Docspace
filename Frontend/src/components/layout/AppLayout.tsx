@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { useTheme } from '../../hooks/useTheme';
 import { cn } from '../../libs/utils';
-import { useNotesStore } from '../../stores/categoryStore';
+import { useNotesStore } from '../../stores/notesStore';
 
 interface AppLayoutProps {
   children: ReactNode;

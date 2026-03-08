@@ -34,15 +34,18 @@ import { Avatar, AvatarFallback } from '../ui/avatar';
 import { SidebarCategoryItem } from '../sidebar/SidebarCategoryItem';
 import { AddCategoryDialog } from '../categories/AddCategoryDialog';
 import { SettingsDialog } from '../settings/SettingsDialog';
-import { useCategoryStore, useNotesStore as notesStore } from '../../stores/categoryStore';
+import { useCategoryStore } from '../../stores/categoryStore';
+import { useNotesStore } from '../../stores/notesStore';
 
 export function Sidebar() {
 
-  const { sidebarCollapsed, toggleSidebar, selectedCategoryId, setSelectedCategory, moveNote, reorderNotes } = notesStore();
+  const { sidebarCollapsed, toggleSidebar, selectedCategoryId, setSelectedCategory, moveNote, reorderNotes } = useNotesStore();
 
   const { authUser: user } = useAuthStore();
 
   const { categories: category, getCategory, reorderCategories } = useCategoryStore();
+
+  console.log("category", category)
 
   useEffect(() => {
     getCategory();
@@ -64,9 +67,9 @@ export function Sidebar() {
   );
 
   // Collect all notes from categories instead of global notes
-  const allNotes = category.flatMap(c => c.notes);
+  const allNotes = category.flatMap(c => c?.notes || []);
 
-  const pinnedCount = allNotes.filter((n) => n.pinned).length;
+  const pinnedCount = allNotes.filter((n) => n?.pinned).length;
   const allNotesCount = allNotes.length;
 
   const handleDragStart = (event: DragStartEvent) => {

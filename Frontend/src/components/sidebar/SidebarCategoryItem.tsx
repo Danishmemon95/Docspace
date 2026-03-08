@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Folder,
   GripVertical,
   MoreHorizontal,
   Pencil,
   Trash2,
-  Inbox,
   ChevronRight,
   ChevronDown,
   Plus,
@@ -28,28 +26,17 @@ import { cn } from '../../libs/utils';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useCategoryStore } from '../../stores/categoryStore';
-import { useNotesStore } from '../../stores/categoryStore';
 import { Input } from '../ui/input';
+import { useNotesStore } from '../../stores/notesStore';
+import { Icon } from '@iconify/react';
 
 interface SidebarCategoryItemProps {
   category: any;
 }
 
-const colorClasses: Record<string, string> = {
-  red: 'text-note-red',
-  orange: 'text-note-orange',
-  yellow: 'text-note-yellow',
-  green: 'text-note-green',
-  blue: 'text-note-blue',
-  purple: 'text-note-purple',
-  pink: 'text-note-pink',
-  gray: 'text-note-gray',
-};
-
 export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
   const { createNote } = useNotesStore();
   const { deleteCategory, getCategory } = useCategoryStore()
-  useNotesStore()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -157,11 +144,10 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
             )}
           </button>
 
-          {isUncategorized ? (
-            <Inbox className={cn("w-4 h-4 shrink-0", colorClasses[category.color])} />
-          ) : (
-            <Folder className={cn("w-4 h-4 shrink-0", colorClasses[category.color])} />
-          )}
+          <Icon
+            icon={category.icon || (isUncategorized ? 'mdi:inbox-outline' : 'mdi:folder-outline')}
+            className="w-4 h-4 shrink-0 text-muted-foreground"
+          />
 
           <span className="flex-1 text-sm font-medium text-sidebar-foreground truncate">
             {category.category_name}

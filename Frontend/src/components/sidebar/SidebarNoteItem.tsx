@@ -1,7 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FileText, GripVertical, MoreHorizontal, Trash2, Copy } from 'lucide-react';
-import { useNotesStore } from '../../stores/categoryStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +20,7 @@ import {
 } from '../../components/ui/alert-dialog';
 import { useState } from 'react';
 import { cn } from '../../libs/utils';
+import { useNotesStore } from '../../stores/notesStore';
 
 export function SidebarNoteItem({ note }: any) {
   const { selectedNoteId, setSelectedNote, deleteNote, duplicateNote } = useNotesStore();

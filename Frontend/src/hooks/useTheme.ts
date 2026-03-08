@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNotesStore } from '../stores/categoryStore';
+import { useNotesStore } from '../stores/notesStore';
 
 export function useTheme() {
   const { theme, setTheme } = useNotesStore();

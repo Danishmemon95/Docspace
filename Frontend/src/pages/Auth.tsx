@@ -6,7 +6,7 @@ import { Label } from '../components/ui/label';
 import { ArrowRight, Loader2, Sparkles, Zap, Shield, Layers, PenTool, FolderOpen } from 'lucide-react';
 import { useToast } from '../components/ui/use-toast';
 import { useAuthStore } from '../stores/newAuthStore';
-import noteIcon from "../../public/docspaceicon.png"
+import noteIcon from "../Icons/docspaceicon.png";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);

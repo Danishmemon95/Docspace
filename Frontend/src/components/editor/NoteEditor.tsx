@@ -15,7 +15,7 @@ import { Button } from '../ui/button';
 // import { DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
 import { useCategoryStore } from '../../stores/categoryStore';
-import { useNotesStore } from '../../stores/categoryStore';
+import { useNotesStore } from '../../stores/notesStore';
 
 export function NoteEditor() {
   const { categories } = useCategoryStore()
