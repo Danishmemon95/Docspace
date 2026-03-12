@@ -21,10 +21,13 @@ import {
 import { useState } from 'react';
 import { cn } from '../../libs/utils';
 import { useNotesStore } from '../../stores/notesStore';
+import type { Note } from '../../Types/Note';
+import { useIsMobile } from '../../hooks/use-mobile';
 
-export function SidebarNoteItem({ note }: any) {
-  const { selectedNoteId, setSelectedNote, deleteNote, duplicateNote } = useNotesStore();
+export function SidebarNoteItem({ note }: { note: Note }) {
+  const { selectedNoteId, setSelectedNote, deleteNote, duplicateNote, toggleSidebar } = useNotesStore();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const isMobile = useIsMobile();
 
   const {
     attributes,
@@ -69,7 +72,10 @@ export function SidebarNoteItem({ note }: any) {
             : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
           isDragging && "opacity-50"
         )}
-        onClick={() => setSelectedNote(note._id)}
+        onClick={() => {
+          setSelectedNote(note._id);
+          if (isMobile) toggleSidebar();
+        }}
       >
         <button
           className="opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 transition-opacity"

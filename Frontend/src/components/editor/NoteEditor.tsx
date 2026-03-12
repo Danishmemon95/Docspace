@@ -131,7 +131,7 @@ export function NoteEditor() {
 
   if (!selectedNote) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background">
+      <div className="flex-1 flex items-center justify-center bg-background p-4">
         <div className="text-center max-w-xs">
           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
             <FileText className="w-6 h-6 text-muted-foreground" />
@@ -148,9 +148,9 @@ export function NoteEditor() {
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden">
       {/* Enhanced Header */}
-      <div className="px-12 pt-10 pb-6 group/header">
+      <div className="px-4 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8 lg:pt-10 pb-4 sm:pb-6 group/header">
         {/* Top metadata row */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
           {noteCategory && (
             <Badge variant="secondary" className="gap-1.5 text-xs font-medium">
               <span
@@ -176,8 +176,7 @@ export function NoteEditor() {
             onFocus={() => setIsTitleFocused(true)}
             onBlur={() => setIsTitleFocused(false)}
             placeholder="Untitled"
-            className="text-4xl font-bold border-none shadow-none px-0 h-auto focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground/30 tracking-tight"
-          />
+            className="text-xl sm:text-2xl lg:text-3xl font-bold border-none shadow-none px-3 sm:px-4 py-3 sm:py-4 h-auto focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground/40 tracking-tight" />
           {/* Animated underline */}
           <div
             className={`absolute -bottom-1 left-0 h-0.5 bg-border transition-all duration-300 ease-out ${isTitleFocused
@@ -188,28 +187,22 @@ export function NoteEditor() {
         </div>
 
         {/* Bottom metadata row */}
-        <div className="flex items-center justify-between mt-5">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-5 gap-2 sm:gap-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
               {/* {noteById?.updated_at && ( */}
               <span>{formatDate(noteById?.updatedAt)}</span>
               {/* )} */}
             </span>
-            <span className="text-border">•</span>
+            <span className="hidden sm:inline text-border">•</span>
             {/* <span>words</span> */}
-            <span className="text-border">•</span>
-            {noteById?.createdAt && (
-              <span>
-                Created{" "}
-                {formatDistanceToNow(new Date(noteById.createdAt), {
-                  addSuffix: true,
-                })}
-              </span>
-            )}          </div>
+            <span className="hidden sm:inline text-border">•</span>
+            <span className="hidden sm:inline">Created {formatDistanceToNow(new Date(selectedNote.createdAt), { addSuffix: true })}</span>
+          </div>
 
           {/* Quick actions - visible on hover */}
-          <div className="flex items-center gap-0.5 opacity-0 group-hover/header:opacity-100 transition-opacity duration-200">
+          <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover/header:opacity-100 transition-opacity duration-200">
             <Button
               variant="ghost"
               size="icon"
@@ -267,12 +260,11 @@ export function NoteEditor() {
       </div>
 
       {/* Gradient divider */}
-      <div className="mx-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
+      <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
       {/* Editor */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="px-12 py-8">
+        <div className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8">
           <BlockNoteView
             editor={editor}
             theme={

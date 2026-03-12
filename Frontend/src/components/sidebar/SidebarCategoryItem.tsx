@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   GripVertical,
@@ -29,12 +29,15 @@ import { useCategoryStore } from '../../stores/categoryStore';
 import { Input } from '../ui/input';
 import { useNotesStore } from '../../stores/notesStore';
 import { Icon } from '@iconify/react';
+import { useDroppable } from '@dnd-kit/core';
+import type { Note } from '../../Types/Note';
 
 interface SidebarCategoryItemProps {
   category: any;
+  isDraggingNote: boolean;
 }
 
-export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
+export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategoryItemProps) {
   const { createNote } = useNotesStore();
   const { deleteCategory, getCategory } = useCategoryStore()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -43,6 +46,14 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { setNodeRef: setEmptyDropRef, isOver: isOverEmpty } = useDroppable({
+    id: `empty-${category._id}`,
+    data: {
+      type: 'category',
+      category,
+    },
+  });
 
   const {
     attributes,
@@ -64,7 +75,7 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
     transition,
   };
 
-  const isUncategorized = category.category_name === "Uncategorised";
+  const isDefault = category.isDefault;
 
   const handleDelete = () => {
     deleteCategory(category._id);
@@ -86,8 +97,11 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
     setNewNoteTitle('');
   };
 
+  const isSubmittingRef = useRef(false);
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      isSubmittingRef.current = true;
       e.preventDefault();
       handleCreateNote();
     } else if (e.key === 'Escape') {
@@ -97,11 +111,8 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
   };
 
   const handleInputBlur = () => {
-    setTimeout(() => {
-      if (isCreatingNote) {
-        handleCreateNote();
-      }
-    }, 100);
+    if (!isSubmittingRef.current) handleCreateNote();
+    isSubmittingRef.current = false;
   };
 
   useEffect(() => {
@@ -109,6 +120,8 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
       inputRef.current.focus();
     }
   }, [isCreatingNote]);
+
+  const noteIds = category.notes?.map((n: any) => n._id) ?? [];
 
   return (
     <>
@@ -125,7 +138,8 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
           <button
             className={cn(
               "cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0 transition-opacity",
-              isUncategorized ? "opacity-0 pointer-events-none" : "opacity-0 group-hover:opacity-100"
+              isDefault ? "opacity-0 pointer-events-none" : "opacity-0 group-hover:opacity-100",
+              isDraggingNote && "pointer-events-none opacity-0" // ← frozen during note drag
             )}
             {...attributes}
             {...listeners}
@@ -145,7 +159,7 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
           </button>
 
           <Icon
-            icon={category.icon || (isUncategorized ? 'mdi:inbox-outline' : 'mdi:folder-outline')}
+            icon={category.icon || (isDefault ? 'mdi:inbox-outline' : 'mdi:folder-outline')}
             className="w-4 h-4 shrink-0 text-muted-foreground"
           />
 
@@ -162,7 +176,7 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
             <Plus className="w-3.5 h-3.5" />
           </Button>
 
-          {!isUncategorized && (
+          {!isDefault && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -194,26 +208,41 @@ export function SidebarCategoryItem({ category }: SidebarCategoryItemProps) {
         {/* Notes list - droppable area */}
         {isExpanded && (
           <div className="mt-0.5 space-y-0.5">
-            {isCreatingNote && (
-              <div className="ml-8 px-1 py-0.5">
-                <Input
-                  ref={inputRef}
-                  value={newNoteTitle}
-                  onChange={(e) => setNewNoteTitle(e.target.value)}
-                  onKeyDown={handleInputKeyDown}
-                  onBlur={handleInputBlur}
-                  placeholder="Enter note title..."
-                  className="h-7 text-sm bg-sidebar-accent border-primary/30 focus-visible:ring-primary/20"
-                />
-              </div>
-            )}
-            {category.notes?.map((note: any) => (
-              <SidebarNoteItem key={note._id} note={note} />
-            ))}
+            <SortableContext items={noteIds} strategy={verticalListSortingStrategy}>
+              {isCreatingNote && (
+                <div className="ml-8 px-1 py-0.5">
+                  <Input
+                    ref={inputRef}
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    onBlur={handleInputBlur}
+                    placeholder="Enter note title..."
+                    className="h-7 text-sm bg-sidebar-accent border-primary/30 focus-visible:ring-primary/20"
+                  />
+                </div>
+              )}
 
+              {category.notes?.map((note: Note) => (
+                <SidebarNoteItem key={note._id} note={note} />
+              ))}
+            </SortableContext>
+
+            {/* 
+      Always render when dragging a note — gives a drop target even when category is empty.
+      Hidden when category has notes (notes themselves are the drop targets then).
+    */}
             {category.notes?.length === 0 && !isCreatingNote && (
-              <div className="ml-8 px-3 py-1.5 text-xs text-muted-foreground/60 italic">
-                No notes
+              <div
+                ref={setEmptyDropRef}
+                className={cn(
+                  "ml-8 px-3 py-3 rounded-lg text-xs italic transition-all duration-150",
+                  isOverEmpty
+                    ? "bg-primary/10 text-primary border border-dashed border-primary/40"
+                    : "text-muted-foreground/60"
+                )}
+              >
+                {isOverEmpty ? "Drop here" : "No notes"}
               </div>
             )}
           </div>
