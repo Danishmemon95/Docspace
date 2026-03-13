@@ -36,7 +36,6 @@ import { useNotesStore } from '../../stores/notesStore';
 import type { Note } from '../../Types/Note';
 import type { CategoryItem } from '../../stores/categoryStore';
 
-// Only fires when pointer is inside an element — most precise for nested layouts
 const collisionDetection: CollisionDetection = (args) => {
   const pointerHits = pointerWithin(args);
   if (pointerHits.length > 0) return pointerHits;
@@ -66,14 +65,15 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [localCategories, setLocalCategories] = useState<CategoryItem[]>([]);
 
-  // What type is currently being dragged — gates which SortableContexts are active
   const [dragType, setDragType] = useState<DragType>(null);
 
   const isDraggingRef = useRef(false);
-  // Tracks the note's CURRENT category as it moves across — NOT the stale snapshot from active.data
+  // Tracks the note's CURRENT category as it moves — this is the single source of truth
   const currentDragCategoryRef = useRef<string | null>(null);
+  // Snapshot of the note's original category before the drag began
+  const originalCategoryRef = useRef<string | null>(null);
 
-  // Sync store → local only when idle
+  // Sync store → local ONLY when not dragging
   useEffect(() => {
     if (!isDraggingRef.current) {
       setLocalCategories([...categories].sort((a, b) => a.order - b.order));
@@ -97,6 +97,8 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
       setDragType('note');
       setActiveNote(data.note);
       currentDragCategoryRef.current = data.note.categoryId;
+      // Save the original so we can always tell if a cross-category move happened
+      originalCategoryRef.current = data.note.categoryId;
     } else if (data?.type === 'category') {
       setDragType('category');
     }
@@ -116,7 +118,7 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
     const draggedNote = activeData.note as Note;
     const sourceCategoryId = currentDragCategoryRef.current!;
 
-    // Resolve target category — now also handles empty zone droppables
+    // Resolve target category from the droppable under the pointer
     let targetCategoryId: string | null = null;
     if (overData?.type === 'note') targetCategoryId = overData.note.categoryId;
     else if (overData?.type === 'category') targetCategoryId = overData.category._id;
@@ -124,6 +126,7 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
     if (!targetCategoryId) return;
 
     if (sourceCategoryId === targetCategoryId) {
+      // Same-category reorder
       if (overData?.type !== 'note') return;
       setLocalCategories((prev) => prev.map((cat) => {
         if (cat._id !== sourceCategoryId) return cat;
@@ -133,7 +136,9 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
         return { ...cat, notes: arrayMove(cat.notes, oldIdx, newIdx) };
       }));
     } else {
+      // Cross-category move — update the live tracking ref FIRST
       currentDragCategoryRef.current = targetCategoryId;
+
       setLocalCategories((prev) => prev.map((cat) => {
         if (cat._id === sourceCategoryId) {
           return { ...cat, notes: cat.notes.filter((n) => n._id !== activeNoteId) };
@@ -147,7 +152,6 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
             updated.splice(insertAt >= 0 ? insertAt : updated.length, 0, movedNote);
             return { ...cat, notes: updated };
           }
-          // Dropped on category header OR empty zone — append
           return { ...cat, notes: [...cat.notes, movedNote] };
         }
         return cat;
@@ -159,15 +163,19 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    // Capture ref values BEFORE resetting them
+    // Read refs BEFORE resetting — these are the authoritative final positions
     const finalCategoryId = currentDragCategoryRef.current;
+    const originalNoteCategory = originalCategoryRef.current;
 
+    // Reset all drag state
     setActiveNote(null);
     setDragType(null);
     isDraggingRef.current = false;
     currentDragCategoryRef.current = null;
+    originalCategoryRef.current = null;
 
-    if (!over || active.id === over.id) {
+    if (!over) {
+      // Dropped outside — revert to server state
       setLocalCategories([...categories].sort((a, b) => a.order - b.order));
       return;
     }
@@ -191,41 +199,32 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
 
     // ── Note drop ────────────────────────────────────────────────────────────
     if (activeData?.type === 'note') {
-      const originalNote = activeData.note as Note;
+      // CRITICAL FIX: use the ref (live position) not overData (stale snapshot)
+      // finalCategoryId is where the note actually ended up after all dragOver events.
+      // overData.note.categoryId would still hold the *original* categoryId baked
+      // into the sortable data at drag-start — it does NOT reflect dragOver moves.
+      const trueFinalCategoryId = finalCategoryId;
 
-      // Resolve where the note actually landed
-      let targetCategoryId: string | null = null;
-      if (overData?.type === 'note') targetCategoryId = overData.note.categoryId;
-      else if (overData?.type === 'category') targetCategoryId = overData.category._id;
-
-      if (!targetCategoryId) {
+      if (!trueFinalCategoryId || !originalNoteCategory) {
         setLocalCategories([...categories].sort((a, b) => a.order - b.order));
         return;
       }
 
-      const targetCategory = localCategories.find((c) => c._id === targetCategoryId);
-      if (!targetCategory) return;
-
-      const isCrossCategory = originalNote.categoryId !== targetCategoryId;
-      // finalCategoryId is where the note visually ended up after all dragOver events
-      const hasVisuallyMoved = finalCategoryId !== originalNote.categoryId;
+      const isCrossCategory = originalNoteCategory !== trueFinalCategoryId;
 
       if (isCrossCategory) {
-        // API call — visual state already correct from dragOver optimistic updates
-        moveNote(originalNote._id, targetCategoryId);
-      } else if (!isCrossCategory) {
-        // Same category reorder
+        // Visual state is already correct from dragOver optimistic updates
+        moveNote(active.id as string, trueFinalCategoryId);
+      } else {
+        // Same-category reorder — derive new order from current localCategories state
+        const targetCategory = localCategories.find((c) => c._id === trueFinalCategoryId);
+        if (!targetCategory) return;
+
         const reorderedNotes = targetCategory.notes.map((note, i) => ({
           _id: note._id,
           order: i,
         }));
-        reorderNotes(reorderedNotes, targetCategoryId, targetCategory.notes);
-      }
-
-      // Edge case: note was dragged over another category mid-drag but dropped back
-      // on original — visual already reset via dragOver, no API needed
-      if (hasVisuallyMoved && !isCrossCategory) {
-        setLocalCategories([...categories].sort((a, b) => a.order - b.order));
+        reorderNotes(reorderedNotes, trueFinalCategoryId, targetCategory.notes);
       }
     }
   };
@@ -322,15 +321,10 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            {/*
-              OUTER SortableContext — only category IDs.
-              When a NOTE is being dragged, this context is effectively inactive
-              because no category item will respond to note drag events.
-            */}
             <SortableContext
               items={localCategories.map((c) => c._id)}
               strategy={verticalListSortingStrategy}
-              disabled={dragType === 'note'} // ← categories frozen while dragging a note
+              disabled={dragType === 'note'}
             >
               <div className="space-y-0.5">
                 {localCategories.map((category) => (

@@ -92,4 +92,13 @@ const logout = (req, res) => {
     }
 }
 
-export { signup, login, logout };
+const checkAuth = (req, res) => {
+    try {
+        res.status(200).json({ success: true, message: "Authenticated", user: req.user });
+    } catch (error) {
+        console.log("Error in check auth", error.message);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+}
+
+export { signup, login, logout, checkAuth };

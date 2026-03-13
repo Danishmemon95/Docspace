@@ -7,30 +7,40 @@ import { Toaster as Sonner } from "./components/ui/toaster";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
+
+const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthStore();
+  const isCheckingAuth = useAuthStore((s) => s.isCheckingAuth);
+
+  if (isCheckingAuth) return null;
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthStore();
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 const App = () => {
 
-  const queryClient = new QueryClient();
+  const { checkAuth } = useAuthStore();
 
-  function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated } = useAuthStore();
-
-    if (!isAuthenticated) {
-      return <Navigate to="/auth" replace />;
-    }
-
-    return <>{children}</>;
-  }
-
-  function AuthRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated } = useAuthStore();
-
-    if (isAuthenticated) {
-      return <Navigate to="/" replace />;
-    }
-
-    return <>{children}</>;
-  }
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -39,14 +49,8 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route
-              path="/"
-              element={<ProtectedRoute><Index /></ProtectedRoute>}
-            />
-            <Route
-              path="/auth"
-              element={<AuthRoute><Auth /></AuthRoute>}
-            />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

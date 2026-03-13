@@ -202,7 +202,7 @@ const categoryWithNotes = async (req, res) => {
     try {
         const categories = await Category.find({ userId: req.user._id }).sort({ order: 1 });
 
-        const notes = await Note.find({ userId: req.user._id }).sort({ order: 1 }).select('-content-__v').lean();
+        const notes = await Note.find({ userId: req.user._id, deleted_at: null }).sort({ order: 1 }).select('_id title categoryId order deleted_at createdAt updatedAt').lean();
 
         const categoriesWithNotes = categories.map(category => {
             const categoryNotes = notes.filter(

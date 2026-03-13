@@ -26,6 +26,8 @@ import { useIsMobile } from '../../hooks/use-mobile';
 
 export function SidebarNoteItem({ note }: { note: Note }) {
   const { selectedNoteId, setSelectedNote, deleteNote, duplicateNote, toggleSidebar } = useNotesStore();
+  // FIX: separate the two dialog states — dropdown and delete confirm are independent
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const isMobile = useIsMobile();
 
@@ -58,6 +60,7 @@ export function SidebarNoteItem({ note }: { note: Note }) {
 
   const handleDuplicate = () => {
     duplicateNote(note._id);
+    setDropdownOpen(false);
   };
 
   return (
@@ -73,6 +76,8 @@ export function SidebarNoteItem({ note }: { note: Note }) {
           isDragging && "opacity-50"
         )}
         onClick={() => {
+          // Don't navigate if a dialog is open
+          if (showDeleteDialog || dropdownOpen) return;
           setSelectedNote(note._id);
           if (isMobile) toggleSidebar();
         }}
@@ -88,8 +93,8 @@ export function SidebarNoteItem({ note }: { note: Note }) {
         <FileText className="w-3.5 h-3.5 shrink-0" />
         <span className="truncate flex-1">{note.title || 'Untitled'}</span>
 
-        {/* Three-dot menu */}
-        <DropdownMenu>
+        {/* FIX: DropdownMenu is now driven by its own open state, not the delete dialog */}
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button
               className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-accent transition-opacity"
@@ -99,13 +104,17 @@ export function SidebarNoteItem({ note }: { note: Note }) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={handleDuplicate}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicate(); }}>
               <Copy className="w-4 h-4 mr-2" />
               Duplicate
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(false);      // close the dropdown first
+                setShowDeleteDialog(true);   // then open the confirmation
+              }}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -115,7 +124,7 @@ export function SidebarNoteItem({ note }: { note: Note }) {
         </DropdownMenu>
       </div>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete confirmation — completely separate from the dropdown */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
