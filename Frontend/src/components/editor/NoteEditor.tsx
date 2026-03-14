@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCreateBlockNote } from "@blocknote/react";
-import type { Block } from "@blocknote/core";
+import type { Block, PartialBlock } from "@blocknote/core";
 import { debounce } from 'lodash';
 import { BlockNoteView, darkDefaultTheme, lightDefaultTheme } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
@@ -10,27 +10,32 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { Input } from '../ui/input';
 import { useTheme } from '../../hooks/useTheme';
 import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
-// import { DropdownMenuContent, DropdownMenuItem, } from '@radix-ui/react-dropdown-menu';
 import { Button } from '../ui/button';
-// import { DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { Badge } from '../ui/badge';
 import { useCategoryStore } from '../../stores/categoryStore';
 import { useNotesStore } from '../../stores/notesStore';
 
+// Detect mobile browsers — covers iOS Safari, Android Chrome/Firefox, Samsung Browser
+function isMobileBrowser(): boolean {
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+    navigator.userAgent
+  );
+}
+
 export function NoteEditor() {
-  const { categories } = useCategoryStore()
-  const { selectedNoteId, updateNote, duplicateNote, getById, noteById } = useNotesStore()
+  const { categories } = useCategoryStore();
+  const { selectedNoteId, updateNote, duplicateNote, getById, noteById } = useNotesStore();
 
   const [title, setTitle] = useState('');
   const [isTitleFocused, setIsTitleFocused] = useState(false);
 
-  const theme = useTheme()
-
-  console.log("theme", theme)
+  const theme = useTheme();
 
   const editor = useCreateBlockNote();
 
   const isHydrating = useRef(false);
+  // Holds a ref to the editor's DOM container so we can attach a paste listener
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedNote = useMemo(() => {
     return categories
@@ -63,7 +68,6 @@ export function NoteEditor() {
     () =>
       debounce((id: string, blocks: Block[], title: string) => {
         if (!selectedNoteId) return;
-
         updateNote(id, blocks, title);
       }, 800),
     [selectedNoteId]
@@ -74,19 +78,98 @@ export function NoteEditor() {
     [categories, selectedNote?.categoryId]
   );
 
-  const noteContent = useMemo(() => {
-    return noteById?.content || [];
-  }, [noteById]);
+  // ─── Mobile paste fix ────────────────────────────────────────────────────────
+  //
+  // Mobile browsers fire a ClipboardEvent where:
+  //   - clipboardData.getData('text/html') is often empty (mobile doesn't write HTML to clipboard)
+  //   - clipboardData.getData('text/plain') has the full text but mobile keyboards
+  //     sometimes only deliver up to the first newline via the default handler
+  //
+  // Strategy:
+  //   1. On mobile, intercept the paste event before BlockNote sees it.
+  //   2. Read text/plain ourselves from the clipboard.
+  //   3. Split on newlines → insert each non-empty line as a separate paragraph block.
+  //   4. Call e.preventDefault() so BlockNote's default handler doesn't also run.
+  //
+  // On desktop we do nothing — BlockNote's built-in paste (which handles HTML, markdown,
+  // and plain text) works correctly there.
+  // ────────────────────────────────────────────────────────────────────────────
 
-  console.log("noteById", noteById)
+  const handleMobilePaste = useCallback(
+    (e: ClipboardEvent) => {
+      if (!isMobileBrowser()) return;
 
-  console.log("noteContent", noteContent)
+      const clipboardData = e.clipboardData;
+      if (!clipboardData) return;
 
-  // const handleTogglePin = useCallback(() => {
-  //   if (selectedNoteId && selectedNote) {
-  //     updateNote(selectedNoteId, selectedNote.content, selectedNote.title);
-  //   }
-  // }, [selectedNoteId, selectedNote, updateNote]);
+      // If there's HTML on the clipboard let BlockNote handle it — it's already rich
+      const html = clipboardData.getData('text/html');
+      if (html && html.trim().length > 0) return;
+
+      const plainText = clipboardData.getData('text/plain');
+      if (!plainText) return;
+
+      // Split on any combination of \r\n, \r, or \n
+      const lines = plainText.split(/\r\n|\r|\n/);
+
+      // If it's a single line there's nothing to fix — let BlockNote handle it normally
+      if (lines.length <= 1) return;
+
+      // We're taking over — prevent BlockNote's default paste
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Build one paragraph block per non-empty line.
+      // Empty lines between paragraphs become empty paragraph blocks (preserves spacing).
+      const newBlocks: PartialBlock[] = lines.map((line) => ({
+        type: 'paragraph',
+        content: line.length > 0
+          ? [{ type: 'text', text: line, styles: {} }]
+          : [],
+      }));
+
+      // Insert after the currently focused block, or at the end if nothing is focused
+      const currentBlock = editor.getTextCursorPosition().block;
+
+      if (currentBlock) {
+        // Check if the current block is empty — if so replace it, otherwise insert after
+        const isCurrentBlockEmpty =
+          !currentBlock.content ||
+          (Array.isArray(currentBlock.content) && currentBlock.content.length === 0);
+
+        if (isCurrentBlockEmpty) {
+          editor.replaceBlocks([currentBlock], newBlocks);
+        } else {
+          editor.insertBlocks(newBlocks, currentBlock, 'after');
+        }
+      } else {
+        // Fallback: append to end of document
+        const lastBlock = editor.document[editor.document.length - 1];
+        if (lastBlock) {
+          editor.insertBlocks(newBlocks, lastBlock, 'after');
+        }
+      }
+
+      // Trigger a save after the paste
+      if (selectedNoteId) {
+        debouncedSave(selectedNoteId, editor.document, title);
+      }
+    },
+    [editor, selectedNoteId, title, debouncedSave]
+  );
+
+  // Attach the paste listener to the editor container.
+  // We use `capture: true` so we intercept before BlockNote's own listener.
+  useEffect(() => {
+    const container = editorContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('paste', handleMobilePaste, { capture: true });
+
+    return () => {
+      container.removeEventListener('paste', handleMobilePaste, { capture: true });
+    };
+  }, [handleMobilePaste]);
 
   const handleDuplicate = useCallback(() => {
     if (selectedNoteId) {
@@ -95,15 +178,8 @@ export function NoteEditor() {
   }, [selectedNoteId, duplicateNote]);
 
   const handleExportPDF = useCallback(() => {
-    // TODO: Implement PDF export
     console.log('Export to PDF');
   }, []);
-
-  // const handleDelete = useCallback(() => {
-  //   if (selectedNoteId) {
-  //     deleteNote(selectedNoteId);
-  //   }
-  // }, [selectedNoteId, deleteNote]);
 
   useEffect(() => {
     if (selectedNote) {
@@ -118,7 +194,6 @@ export function NoteEditor() {
     if (!selectedNoteId) return;
     debouncedSave(selectedNoteId, editor.document, newTitle);
   };
-
 
   useEffect(() => {
     return () => {
@@ -147,7 +222,7 @@ export function NoteEditor() {
 
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden">
-      {/* Enhanced Header */}
+      {/* Header */}
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8 lg:pt-10 pb-4 sm:pb-6 group/header">
         {/* Top metadata row */}
         <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
@@ -262,9 +337,12 @@ export function NoteEditor() {
       {/* Gradient divider */}
       <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-      {/* Editor */}
+      {/* Editor — ref attached here so the paste listener covers the whole editor area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8">
+        <div
+          ref={editorContainerRef}
+          className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8"
+        >
           <BlockNoteView
             editor={editor}
             theme={
@@ -280,6 +358,6 @@ export function NoteEditor() {
           />
         </div>
       </div>
-    </div >
+    </div>
   );
 }
