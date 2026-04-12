@@ -32,7 +32,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { toast } = useToast();
 
   const [name, setName] = useState(authUser?.name);
-  const [email, setEmail] = useState(authUser?.email);
+  // const [email, setEmail] = useState(authUser?.email);
   const [hasNameChanged, setHasNameChanged] = useState(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +45,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       toast({ title: 'Error', description: 'Name cannot be empty' });
       return;
     }
-    
+
     const result = await updateUserName(name.trim());
     if (result.success) {
       setHasNameChanged(false);
@@ -124,7 +124,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <Input
                   id="profile-email"
                   type="email"
-                  value={email}
+                  value={authUser?.email}
                   disabled
                   placeholder="you@example.com"
                   className="h-11 rounded-xl opacity-60 cursor-not-allowed"
@@ -134,8 +134,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </div>
 
             {hasNameChanged && (
-              <Button 
-                onClick={handleSaveProfile} 
+              <Button
+                onClick={handleSaveProfile}
                 className="w-full h-11 rounded-xl font-semibold"
                 disabled={isUpdatingProfile}
               >
