@@ -1,5 +1,5 @@
 import express from "express";
-import { userCategory, createCategory, updateCategory, deleteCategory, reOrderCategory, getCategoryById, categoryWithNotes } from "../Controllers/categoryController.js";
+import { userCategory, createCategory, updateCategory, deleteCategory, reOrderCategory, getCategoryById, categoryWithNotes, setDefaultCategory } from "../Controllers/categoryController.js";
 import { protectRoute } from "../Middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.get("/with-notes", protectRoute, categoryWithNotes);
 router.post("/", protectRoute, createCategory);
 router.put("/reorder", protectRoute, reOrderCategory);
 
+router.put("/:id/set-default", protectRoute, setDefaultCategory);
 router.put("/:id", protectRoute, updateCategory);
 router.delete("/:id", protectRoute, deleteCategory);
 

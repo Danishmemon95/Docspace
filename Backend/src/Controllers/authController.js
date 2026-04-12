@@ -101,4 +101,38 @@ const checkAuth = (req, res) => {
     }
 }
 
-export { signup, login, logout, checkAuth };
+const updateUserName = async (req, res) => {
+    try {
+        const { name } = req.body;
+        const userId = req.user._id;
+
+        if (!name || name.trim() === "") {
+            return res.status(400).json({ success: false, message: "Name is required" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { name: name.trim() },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Name updated successfully",
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            }
+        });
+    } catch (error) {
+        console.log("Error in update user name", error.message);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+}
+
+export { signup, login, logout, checkAuth, updateUserName };

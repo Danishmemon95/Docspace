@@ -15,11 +15,13 @@ interface AuthStore {
     isLoggingIn: boolean;
     isCheckingAuth: boolean;
     isSigningUp: boolean;
+    isUpdatingProfile: boolean;
 
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
+    updateUserName: (name: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -30,6 +32,7 @@ export const useAuthStore = create<AuthStore>()(
             isLoggingIn: false,
             isCheckingAuth: false,
             isSigningUp: false,
+            isUpdatingProfile: false,
 
             login: async (email, password) => {
                 try {
@@ -88,6 +91,27 @@ export const useAuthStore = create<AuthStore>()(
                     set({ authUser: null, isAuthenticated: false });
                 } finally {
                     set({ isCheckingAuth: false });
+                }
+            },
+
+            updateUserName: async (name) => {
+                try {
+                    set({ isUpdatingProfile: true });
+                    const res = await axiosInstance.put("/auth/update-name", { name });
+                    set({ authUser: res.data.data });
+                    toast({
+                        title: "Success",
+                        description: "Your name has been updated",
+                    });
+                    return { success: true };
+                } catch (error: any) {
+                    toast({
+                        title: "Update failed",
+                        description: error.response?.data?.message || error.message,
+                    });
+                    return { success: false, error: error.response?.data?.message || error.message };
+                } finally {
+                    set({ isUpdatingProfile: false });
                 }
             },
         }),

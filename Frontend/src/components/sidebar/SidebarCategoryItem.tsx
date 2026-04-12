@@ -30,6 +30,7 @@ import { Input } from '../ui/input';
 import { useNotesStore } from '../../stores/notesStore';
 import { Icon } from '@iconify/react';
 import { useDroppable } from '@dnd-kit/core';
+import { Badge } from '../ui/badge';
 import type { Note } from '../../Types/Note';
 
 interface SidebarCategoryItemProps {
@@ -39,7 +40,7 @@ interface SidebarCategoryItemProps {
 
 export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategoryItemProps) {
   const { createNote } = useNotesStore();
-  const { deleteCategory, getCategory } = useCategoryStore()
+  const { deleteCategory, getCategory, setDefaultCategory } = useCategoryStore()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -81,6 +82,10 @@ export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategor
     deleteCategory(category._id);
     setShowDeleteDialog(false);
     getCategory();
+  };
+
+  const handleMakeDefault = () => {
+    setDefaultCategory(category._id);
   };
 
   const handleAddNote = (e: React.MouseEvent) => {
@@ -163,9 +168,16 @@ export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategor
             className="w-4 h-4 shrink-0 text-muted-foreground"
           />
 
-          <span className="flex-1 text-sm font-medium text-sidebar-foreground truncate">
-            {category.category_name}
-          </span>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <span className="text-sm font-medium text-sidebar-foreground truncate">
+              {category.category_name}
+            </span>
+            {isDefault && (
+              <Badge variant="secondary" className="shrink-0 text-xs">
+                Default
+              </Badge>
+            )}
+          </div>
 
           <Button
             variant="ghost"
@@ -192,6 +204,10 @@ export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategor
                 <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
                   <Pencil className="w-4 h-4 mr-2" />
                   Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleMakeDefault}>
+                  <Icon icon="mdi:star-outline" className="w-4 h-4 mr-2" />
+                  Make Default
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"

@@ -228,4 +228,34 @@ const categoryWithNotes = async (req, res) => {
     }
 }
 
-export { userCategory, createCategory, updateCategory, deleteCategory, reOrderCategory, getCategoryById, categoryWithNotes };
+const setDefaultCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.id;
+        const userId = req.user._id;
+
+        const category = await Category.findOne({ _id: categoryId, userId });
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        // Set all categories for this user to isDefault: false
+        await Category.updateMany({ userId }, { $set: { isDefault: false } });
+
+        // Set the requested category to isDefault: true
+        category.isDefault = true;
+        category.updatedAt = Date.now();
+        await category.save();
+
+        res.status(200).json({ success: true, message: "Category set as default successfully", data: category });
+
+    } catch (error) {
+        console.error('Error setting default category:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while setting default category',
+            error: error.message
+        })
+    }
+}
+
+export { userCategory, createCategory, updateCategory, deleteCategory, reOrderCategory, getCategoryById, categoryWithNotes, setDefaultCategory };

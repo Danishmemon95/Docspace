@@ -25,6 +25,7 @@ interface CategoryStore {
     updateCategory: (id: string, name: string, icon: string) => Promise<{ success: boolean; error?: string }>;
     deleteCategory: (id: string) => Promise<{ success: boolean; error?: string }>;
     reorderCategories: (orderedCategories: { _id: string; order: number }[]) => Promise<{ success: boolean; error?: string }>;
+    setDefaultCategory: (id: string) => Promise<{ success: boolean; error?: string }>;
 
     // Sync helpers — called by notesStore after mutations, no API calls
     syncAddNote: (note: Note) => void;
@@ -133,6 +134,26 @@ export const useCategoryStore = create<CategoryStore>()(
                     title: "Reorder categories failed",
                     description: error.response?.data?.message || error.message,
                 });
+                return { success: false, error: error.response?.data?.message || error.message };
+            } finally {
+                set({ isUpdating: false });
+            }
+        },
+
+        setDefaultCategory: async (id) => {
+            try {
+                set({ isUpdating: true });
+                const res = await axiosInstance.put(`/category/${id}/set-default`);
+                set({
+                    categories: get().categories.map((cat) =>
+                        cat._id === id ? { ...cat, isDefault: true } : { ...cat, isDefault: false }
+                    ),
+                });
+                toast({ title: "Success", description: "Category set as default", });
+                console.log("default res", res)
+                return { success: true };
+            } catch (error: any) {
+                toast({ title: "Set default category failed", description: error.response?.data?.message || error.message, });
                 return { success: false, error: error.response?.data?.message || error.message };
             } finally {
                 set({ isUpdating: false });

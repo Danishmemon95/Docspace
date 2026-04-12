@@ -27,19 +27,30 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun; descri
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const navigate = useNavigate();
   // const { updateProfile } = useNotesStore();
-  const { logout, isAuthenticated, authUser } = useAuthStore();
+  const { logout, isAuthenticated, authUser, updateUserName, isUpdatingProfile } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   const [name, setName] = useState(authUser?.name);
   const [email, setEmail] = useState(authUser?.email);
+  const [hasNameChanged, setHasNameChanged] = useState(false);
 
-  console.log("auth User", authUser)
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    setHasNameChanged(e.target.value !== authUser?.name);
+  };
 
-  // const handleSaveProfile = () => {
-  //   // updateProfile({ name, email });
-  //   toast({ title: 'Profile updated', description: 'Your changes have been saved' });
-  // };
+  const handleSaveProfile = async () => {
+    if (!name || name.trim() === "") {
+      toast({ title: 'Error', description: 'Name cannot be empty' });
+      return;
+    }
+    
+    const result = await updateUserName(name.trim());
+    if (result.success) {
+      setHasNameChanged(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -102,7 +113,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 <Input
                   id="profile-name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={handleNameChange}
                   placeholder="Your name"
                   className="h-11 rounded-xl"
                 />
@@ -114,16 +125,23 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   id="profile-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  disabled
                   placeholder="you@example.com"
-                  className="h-11 rounded-xl"
+                  className="h-11 rounded-xl opacity-60 cursor-not-allowed"
                 />
+                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
               </div>
             </div>
 
-            {/* <Button onClick={handleSaveProfile} className="w-full h-11 rounded-xl font-semibold">
-              Save Changes
-            </Button> */}
+            {hasNameChanged && (
+              <Button 
+                onClick={handleSaveProfile} 
+                className="w-full h-11 rounded-xl font-semibold"
+                disabled={isUpdatingProfile}
+              >
+                {isUpdatingProfile ? "Saving..." : "Save Changes"}
+              </Button>
+            )}
 
             {/* Logout section */}
             {isAuthenticated && (
