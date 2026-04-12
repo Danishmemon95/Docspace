@@ -11,7 +11,6 @@ import { Input } from '../ui/input';
 import { useTheme } from '../../hooks/useTheme';
 import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { useCategoryStore } from '../../stores/categoryStore';
 import { useNotesStore } from '../../stores/notesStore';
 
