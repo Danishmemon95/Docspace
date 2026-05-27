@@ -1,9 +1,26 @@
-import { create } from "zustand";
+import { create } from "zustand/react";
 import { axiosInstance } from "../libs/axios";
 import { toast } from "../hooks/use-toast";
 import { type ThemeMode } from "./categoryStore";
 import { useCategoryStore } from "./categoryStore";
 import type { Note } from "../Types/Note";
+
+// ── Theme persistence helpers (bypass zustand middleware to avoid TS issues) ──
+const THEME_KEY = "docspace-theme";
+
+function loadTheme(): ThemeMode {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark" || saved === "system") return saved;
+  } catch { }
+  return "system";
+}
+
+function saveTheme(theme: ThemeMode) {
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch { }
+}
 
 interface NoteStore {
   theme: ThemeMode;
@@ -11,6 +28,7 @@ interface NoteStore {
   sidebarCollapsed: boolean;
   selectedCategoryId: string | null;
   noteById: Note | null;
+  isLoadingNote: boolean;
 
   createNote: (name: string, categoryId: string) => Promise<{ success: boolean; error?: string }>;
   getById: (id: string) => Promise<void>;
@@ -30,14 +48,15 @@ interface NoteStore {
 const getCategorySync = () => useCategoryStore.getState();
 
 export const useNotesStore = create<NoteStore>()(
-  (set) => ({
-    theme: 'system',
+  (set: (partial: Partial<NoteStore> | ((state: NoteStore) => Partial<NoteStore>)) => void) => ({
+    theme: loadTheme(),
     selectedNoteId: null,
     sidebarCollapsed: false,
     selectedCategoryId: null,
     noteById: null,
+    isLoadingNote: false,
 
-    createNote: async (name, categoryId) => {
+    createNote: async (name: string, categoryId: string) => {
       try {
         const res = await axiosInstance.post("/note", { title: name, categoryId });
         const newNote: Note = res.data.data;
@@ -52,7 +71,9 @@ export const useNotesStore = create<NoteStore>()(
       }
     },
 
-    getById: async (id) => {
+    getById: async (id: string) => {
+      // Show skeleton — only triggered on note open/switch, not on auto-save
+      set({ isLoadingNote: true, noteById: null });
       try {
         const res = await axiosInstance.get(`/note/${id}`);
         set({ noteById: res.data.data });
@@ -61,10 +82,13 @@ export const useNotesStore = create<NoteStore>()(
           title: "Failed to fetch note",
           description: error.response?.data?.message || error.message,
         });
+      } finally {
+        set({ isLoadingNote: false });
       }
     },
 
-    updateNote: async (id, content, title) => {
+    updateNote: async (id: string, content: any, title: string) => {
+      // Silent debounced save — no loading state, no skeleton
       try {
         const res = await axiosInstance.put(`/note/${id}`, { content, title });
         const updatedNote: Note = res.data.data;
@@ -79,11 +103,11 @@ export const useNotesStore = create<NoteStore>()(
       }
     },
 
-    deleteNote: async (id) => {
+    deleteNote: async (id: string) => {
       try {
         await axiosInstance.delete(`/note/${id}`);
         getCategorySync().syncDeleteNote(id);
-        set((state) => ({
+        set((state: NoteStore) => ({
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
         }));
         return { success: true };
@@ -96,7 +120,7 @@ export const useNotesStore = create<NoteStore>()(
       }
     },
 
-    duplicateNote: async (id) => {
+    duplicateNote: async (id: string) => {
       try {
         const res = await axiosInstance.post(`/note/${id}/duplicate`);
         const duplicatedNote: Note = res.data.data;
@@ -111,7 +135,7 @@ export const useNotesStore = create<NoteStore>()(
       }
     },
 
-    moveNote: async (noteId, newCategoryId) => {
+    moveNote: async (noteId: string, newCategoryId: string) => {
       try {
         const res = await axiosInstance.put(`/note/${noteId}/move`, { newCategoryId });
         const movedNote: Note = res.data.data;
@@ -151,9 +175,12 @@ export const useNotesStore = create<NoteStore>()(
       }
     },
 
-    setSelectedNote: (id) => set({ selectedNoteId: id }),
-    setSelectedCategory: (id) => set({ selectedCategoryId: id }),
-    toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-    setTheme: (theme) => set({ theme }),
+    setSelectedNote: (id: string | null) => set({ selectedNoteId: id }),
+    setSelectedCategory: (id: string | null) => set({ selectedCategoryId: id }),
+    toggleSidebar: () => set((state: NoteStore) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+    setTheme: (theme: ThemeMode) => {
+      saveTheme(theme);
+      set({ theme });
+    },
   })
 );

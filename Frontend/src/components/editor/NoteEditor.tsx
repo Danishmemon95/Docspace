@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCreateBlockNote } from "@blocknote/react";
-import type { Block, PartialBlock } from "@blocknote/core";
+import type { Block } from "@blocknote/core";
 import { debounce } from 'lodash';
 import { BlockNoteView, darkDefaultTheme, lightDefaultTheme } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
@@ -13,40 +13,37 @@ import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu
 import { Button } from '../ui/button';
 import { useCategoryStore } from '../../stores/categoryStore';
 import { useNotesStore } from '../../stores/notesStore';
-
-function isMobileBrowser(): boolean {
-  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-    navigator.userAgent
-  );
-}
+import { NoteEditorSkeleton } from './NoteEditorSkeleton';
 
 export function NoteEditor() {
   const { categories } = useCategoryStore();
-  const { selectedNoteId, updateNote, duplicateNote, getById, noteById } = useNotesStore();
+  const { selectedNoteId, updateNote, duplicateNote, getById, noteById, isLoadingNote } = useNotesStore();
 
   const [title, setTitle] = useState('');
   const [isTitleFocused, setIsTitleFocused] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  const theme = useTheme();
+  // resolvedTheme is 'light' | 'dark' — reacts to system changes AND manual changes
+  const { resolvedTheme } = useTheme();
 
   const editor = useCreateBlockNote();
 
   const isHydrating = useRef(false);
-  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedNote = useMemo(() => {
     return categories
-      .flatMap(c => c.notes)
-      .find(n => n._id === selectedNoteId);
+      .flatMap((c: any) => c.notes)
+      .find((n: any) => n._id === selectedNoteId);
   }, [categories, selectedNoteId]);
 
+  // Fetch full note content whenever the selected note changes
   useEffect(() => {
     if (selectedNoteId) {
       getById(selectedNoteId);
     }
   }, [selectedNoteId]);
 
+  // Hydrate the editor with stored blocks once the note is fetched
   useEffect(() => {
     if (!noteById?.content) return;
 
@@ -62,6 +59,7 @@ export function NoteEditor() {
     }, 0);
   }, [selectedNoteId, noteById?._id]);
 
+  // Debounced silent save — no loading state triggered here
   const debouncedSave = useMemo(
     () =>
       debounce((id: string, blocks: Block[], title: string) => {
@@ -72,7 +70,7 @@ export function NoteEditor() {
   );
 
   const noteCategory = useMemo(
-    () => categories.find((c) => c._id === selectedNote?.categoryId),
+    () => categories.find((c: any) => c._id === selectedNote?.categoryId),
     [categories, selectedNote?.categoryId]
   );
 
@@ -82,16 +80,13 @@ export function NoteEditor() {
     setIsExportingPDF(true);
 
     try {
-      // Dynamic imports — avoids adding the heavy pdf libs to your initial bundle
       const [{ PDFExporter, pdfDefaultSchemaMappings }, ReactPDF] = await Promise.all([
         import('@blocknote/xl-pdf-exporter'),
         import('@react-pdf/renderer'),
       ]);
 
       const exporter = new PDFExporter(editor.schema, pdfDefaultSchemaMappings);
-
       const pdfDocument = await exporter.toReactPDFDocument(editor.document);
-
       const blob = await ReactPDF.pdf(pdfDocument).toBlob();
 
       const safeTitle = (title || 'note')
@@ -114,70 +109,6 @@ export function NoteEditor() {
     }
   }, [editor, selectedNote, title, isExportingPDF]);
 
-  const handleMobilePaste = useCallback(
-    (e: ClipboardEvent) => {
-      if (!isMobileBrowser()) return;
-
-      const clipboardData = e.clipboardData;
-      if (!clipboardData) return;
-
-      const html = clipboardData.getData('text/html');
-      if (html && html.trim().length > 0) return;
-
-      const plainText = clipboardData.getData('text/plain');
-      if (!plainText) return;
-
-      const lines = plainText.split(/\r\n|\r|\n/);
-
-      if (lines.length <= 1) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      const newBlocks: PartialBlock[] = lines.map((line) => ({
-        type: 'paragraph',
-        content: line.length > 0
-          ? [{ type: 'text', text: line, styles: {} }]
-          : [],
-      }));
-
-      const currentBlock = editor.getTextCursorPosition().block;
-
-      if (currentBlock) {
-        const isCurrentBlockEmpty =
-          !currentBlock.content ||
-          (Array.isArray(currentBlock.content) && currentBlock.content.length === 0);
-
-        if (isCurrentBlockEmpty) {
-          editor.replaceBlocks([currentBlock], newBlocks);
-        } else {
-          editor.insertBlocks(newBlocks, currentBlock, 'after');
-        }
-      } else {
-        const lastBlock = editor.document[editor.document.length - 1];
-        if (lastBlock) {
-          editor.insertBlocks(newBlocks, lastBlock, 'after');
-        }
-      }
-
-      if (selectedNoteId) {
-        debouncedSave(selectedNoteId, editor.document, title);
-      }
-    },
-    [editor, selectedNoteId, title, debouncedSave]
-  );
-
-  useEffect(() => {
-    const container = editorContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener('paste', handleMobilePaste, { capture: true });
-
-    return () => {
-      container.removeEventListener('paste', handleMobilePaste, { capture: true });
-    };
-  }, [handleMobilePaste]);
-
   const handleDuplicate = useCallback(() => {
     if (selectedNoteId) {
       duplicateNote(selectedNoteId);
@@ -193,11 +124,11 @@ export function NoteEditor() {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-
     if (!selectedNoteId) return;
     debouncedSave(selectedNoteId, editor.document, newTitle);
   };
 
+  // Cancel pending debounce when switching notes
   useEffect(() => {
     return () => {
       debouncedSave.cancel();
@@ -207,6 +138,7 @@ export function NoteEditor() {
   const formatDate = (date?: string) =>
     date ? format(new Date(date), "MMM d, yyyy · h:mm a") : "—";
 
+  // ── Empty state ──────────────────────────────────────────────────────────────
   if (!selectedNote) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background p-4">
@@ -223,9 +155,16 @@ export function NoteEditor() {
     );
   }
 
+  // ── Skeleton — only while fetching on open / switch ──────────────────────────
+  if (isLoadingNote) {
+    return <NoteEditorSkeleton />;
+  }
+
+  // ── Real editor ──────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden">
-      {/* Header — compact single-surface design */}
+
+      {/* Header */}
       <div className="px-4 sm:px-6 md:px-8 lg:px-12 pt-5 pb-0 group/header">
 
         {/* Meta row: category badge + pinned indicator */}
@@ -243,7 +182,7 @@ export function NoteEditor() {
           )}
         </div>
 
-        {/* Title input with animated underline */}
+        {/* Title input */}
         <div className="relative">
           <Input
             value={title}
@@ -259,7 +198,7 @@ export function NoteEditor() {
           />
         </div>
 
-        {/* Bottom row: timestamps + action buttons */}
+        {/* Timestamps + action buttons */}
         <div className="flex items-center justify-between py-2 gap-3">
           <div className="flex items-center gap-2.5 flex-wrap">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -274,13 +213,30 @@ export function NoteEditor() {
 
           {/* Actions — fade in on hover */}
           <div className="flex items-center gap-0.5 opacity-0 group-hover/header:opacity-100 transition-opacity duration-200">
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title={selectedNote.pinned ? 'Unpin' : 'Pin'}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              title={selectedNote.pinned ? 'Unpin' : 'Pin'}
+            >
               {selectedNote.pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={handleDuplicate} title="Duplicate">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={handleDuplicate}
+              title="Duplicate"
+            >
               <Copy className="w-3.5 h-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={handleExportPDF} title="Export PDF">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={handleExportPDF}
+              title="Export PDF"
+            >
               {isExportingPDF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             </Button>
             <DropdownMenu>
@@ -297,22 +253,18 @@ export function NoteEditor() {
       {/* Gradient divider */}
       <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-      {/* Gradient divider */}
-      <div className="mx-4 sm:mx-6 md:mx-8 lg:mx-12 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      {/* Editor — ref attached here so the paste listener covers the whole editor area */}
+      {/* Editor */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div
-          ref={editorContainerRef}
-          className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8"
-        >
+        <div className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8">
+          {/*
+            key={resolvedTheme} forces BlockNote to fully remount when the theme
+            changes — this is the only reliable way to make it pick up the new
+            theme object since BlockNoteView doesn't hot-swap themes internally.
+          */}
           <BlockNoteView
+            key={resolvedTheme}
             editor={editor}
-            theme={
-              theme.resolvedTheme === 'dark'
-                ? darkDefaultTheme
-                : lightDefaultTheme
-            }
+            theme={resolvedTheme === 'dark' ? darkDefaultTheme : lightDefaultTheme}
             onChange={() => {
               if (isHydrating.current) return;
               if (!selectedNoteId) return;
