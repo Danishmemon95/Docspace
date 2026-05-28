@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCreateBlockNote } from "@blocknote/react";
 import type { Block } from "@blocknote/core";
 import { debounce } from 'lodash';
-import { BlockNoteView, darkDefaultTheme, lightDefaultTheme } from "@blocknote/mantine";
+import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import "@blocknote/core/fonts/inter.css";
 import { Clock, Copy, Download, FileText, Loader2, MoreHorizontal, Pin, PinOff } from 'lucide-react';
@@ -190,7 +190,7 @@ export function NoteEditor() {
             onFocus={() => setIsTitleFocused(true)}
             onBlur={() => setIsTitleFocused(false)}
             placeholder="Untitled"
-            className="text-[22px] sm:text-2xl font-medium border-none shadow-none px-2 py-1 h-auto focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground/30 tracking-tight leading-snug"
+            className="text-[32px] sm:text-2xl md:text-3xl font-medium border-none shadow-none px-2 py-1 h-auto focus-visible:ring-0 bg-transparent text-foreground placeholder:text-muted-foreground/30 tracking-tight leading-snug"
           />
           <div
             className={`absolute bottom-0 left-0 h-[1.5px] rounded-full bg-foreground/40 transition-all duration-250 ease-out ${isTitleFocused ? 'w-full' : 'w-0'
@@ -256,15 +256,11 @@ export function NoteEditor() {
       {/* Editor */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="px-4 sm:px-6 md:px-8 lg:px-12 py-4 sm:py-6 lg:py-8">
-          {/*
-            key={resolvedTheme} forces BlockNote to fully remount when the theme
-            changes — this is the only reliable way to make it pick up the new
-            theme object since BlockNoteView doesn't hot-swap themes internally.
-          */}
           <BlockNoteView
             key={resolvedTheme}
             editor={editor}
-            theme={resolvedTheme === 'dark' ? darkDefaultTheme : lightDefaultTheme}
+            theme={resolvedTheme === 'dark' ? "dark" : "light"}
+            // theme={resolvedTheme === 'dark' ? darkDefaultTheme : lightDefaultTheme}
             onChange={() => {
               if (isHydrating.current) return;
               if (!selectedNoteId) return;

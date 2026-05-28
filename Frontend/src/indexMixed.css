@@ -1,0 +1,393 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   THEME GUIDE — to switch themes:
+   1. Pick a LIGHT block below, copy its variables into :root {}
+   2. Pick a DARK block below, copy its variables into .dark {}
+   3. Save — changes apply instantly.
+
+   THEME OPTIONS
+   ─────────────────────────────────────────────────────────────
+   LIGHT  Option 1 ✅ ACTIVE  — Warm Cream       (Bear / Notion)
+          Option 2            — Pure Linen        (iA Writer)
+          Option 3            — Cool Paper        (Linear / Craft)
+
+   DARK   Option 1 ✅ ACTIVE  — Warm Charcoal    (Obsidian / Bear)
+          Option 2            — Deep Slate        (VS Code / Vercel)
+          Option 3            — GitHub Dimmed     (GitHub dark dimmed)
+
+   ACCENT — Indigo #6366f1 is shared across all three combos.
+            Change --brand / --brand-hover if you want a different accent.
+   ============================================================ */
+
+@layer base {
+  :root {
+
+    /* ══════════════════════════════════════════════════════════
+       LIGHT — Option 1 ✅ ACTIVE
+       Warm Cream  |  Bear · Notion style
+       bg: #f7f4ef  fg: #1e2030  sidebar: #f0ece5
+    ══════════════════════════════════════════════════════════ */
+    --background:            36 28% 96%;    /* #f7f4ef warm parchment         */
+    --foreground:           228 20% 15%;    /* #1e2030 soft dark navy         */
+    --card:                   0  0% 100%;
+    --card-foreground:       228 20% 15%;
+    --card-hover:             36 20% 93%;
+    --popover:                0  0% 100%;
+    --popover-foreground:    228 20% 15%;
+    --primary:               228 20% 16%;
+    --primary-foreground:     36 28% 96%;
+    --secondary:              36 18% 91%;
+    --secondary-foreground:  228 14% 32%;
+    --muted:                  36 18% 91%;
+    --muted-foreground:      240  6% 48%;   /* #7a7a8a cool-warm gray         */
+    --accent:                 36 18% 88%;
+    --accent-foreground:     228 20% 16%;
+    --destructive:             4 70% 54%;
+    --destructive-foreground:  0  0% 100%;
+    --border:                 32 18% 86%;   /* #e4dfd8 warm dividers          */
+    --input:                  32 18% 86%;
+    --ring:                  245 60% 70%;
+    --sidebar-background:     33 24% 93%;   /* #f0ece5 deeper cream           */
+    --sidebar-foreground:    228 14% 32%;
+    --sidebar-primary:       245 90% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:         36 18% 88%;
+    --sidebar-accent-foreground: 228 20% 16%;
+    --sidebar-border:         32 16% 87%;
+    --sidebar-ring:          245 90% 64%;
+
+    /* ──── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+       LIGHT — Option 2 (commented out)
+       Pure Linen  |  iA Writer style
+       bg: #faf9f7  fg: #2d2d2d  sidebar: #f3f2f0
+
+    --background:            40 18% 98%;
+    --foreground:             0  0% 18%;
+    --card:                   0  0% 100%;
+    --card-foreground:         0  0% 18%;
+    --card-hover:             40 12% 95%;
+    --popover:                 0  0% 100%;
+    --popover-foreground:      0  0% 18%;
+    --primary:                 0  0% 18%;
+    --primary-foreground:     40 18% 98%;
+    --secondary:              40 12% 94%;
+    --secondary-foreground:    0  0% 35%;
+    --muted:                  40 12% 94%;
+    --muted-foreground:       35  4% 53%;
+    --accent:                 40 12% 91%;
+    --accent-foreground:       0  0% 18%;
+    --destructive:             4 70% 54%;
+    --destructive-foreground:  0  0% 100%;
+    --border:                 40  8% 89%;
+    --input:                  40  8% 89%;
+    --ring:                  245 60% 70%;
+    --sidebar-background:     40 14% 95%;
+    --sidebar-foreground:      0  0% 35%;
+    --sidebar-primary:       245 90% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:         40 12% 91%;
+    --sidebar-accent-foreground: 0 0% 18%;
+    --sidebar-border:         40  8% 90%;
+    --sidebar-ring:          245 90% 64%;
+    ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+    /* ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+       LIGHT — Option 3 (commented out)
+       Cool Paper  |  Linear · Craft style
+       bg: #f8f9fa  fg: #212529  sidebar: #f1f3f5
+
+    --background:            210  8% 98%;
+    --foreground:            210 10% 15%;
+    --card:                    0  0% 100%;
+    --card-foreground:        210 10% 15%;
+    --card-hover:            210  8% 95%;
+    --popover:                 0  0% 100%;
+    --popover-foreground:     210 10% 15%;
+    --primary:               210 10% 15%;
+    --primary-foreground:    210  8% 98%;
+    --secondary:             210  8% 93%;
+    --secondary-foreground:  210  8% 38%;
+    --muted:                 210  8% 93%;
+    --muted-foreground:      208  7% 46%;
+    --accent:                210  8% 90%;
+    --accent-foreground:     210 10% 15%;
+    --destructive:             4 70% 54%;
+    --destructive-foreground:  0  0% 100%;
+    --border:                210  8% 88%;
+    --input:                 210  8% 88%;
+    --ring:                  245 60% 70%;
+    --sidebar-background:    210  9% 95%;
+    --sidebar-foreground:    210  8% 38%;
+    --sidebar-primary:       245 90% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:        210  8% 90%;
+    --sidebar-accent-foreground: 210 10% 15%;
+    --sidebar-border:        210  8% 89%;
+    --sidebar-ring:          245 90% 64%;
+    ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+    --radius: 8px;
+
+    /* Indigo accent — shared across all light themes */
+    --brand:              245 90% 64%;     /* #6366f1                        */
+    --brand-foreground:     0  0% 100%;
+    --brand-muted:        245 80% 95%;
+    --brand-hover:        245 90% 58%;
+    --brand-glow:         245 90% 72%;
+
+    --note-red:    0 60% 95%;
+    --note-orange: 25 60% 95%;
+    --note-yellow: 45 60% 95%;
+    --note-green:  145 40% 94%;
+    --note-blue:   210 55% 95%;
+    --note-purple: 270 45% 95%;
+    --note-pink:   330 50% 95%;
+    --note-gray:   220 10% 94%;
+
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 20px 32px -5px rgb(0 0 0 / 0.09), 0 8px 12px -6px rgb(0 0 0 / 0.04);
+
+    --bn-bg:     hsl(var(--background));
+    --bn-text:   hsl(var(--foreground));
+    --bn-muted:  hsl(var(--muted-foreground));
+    --bn-border: hsl(var(--border));
+  }
+
+  .dark {
+
+    /* ══════════════════════════════════════════════════════════
+       DARK — Option 1 ✅ ACTIVE
+       Warm Charcoal  |  Obsidian · Bear dark style
+       bg: #1c1917  fg: #e7e5e4  sidebar: #171512
+    ══════════════════════════════════════════════════════════ */
+    --background:            24  6% 11%;    /* #1c1917 stone-950 warm near-black */
+    --foreground:            30  8% 91%;    /* #e7e5e4 stone-200 warm off-white  */
+    --card:                  24  6% 14%;
+    --card-foreground:       30  8% 91%;
+    --card-hover:            24  6% 17%;
+    --popover:               24  6% 14%;
+    --popover-foreground:    30  8% 91%;
+    --primary:               30  8% 89%;
+    --primary-foreground:    24  6% 11%;
+    --secondary:             24  5% 19%;
+    --secondary-foreground:  30  6% 68%;
+    --muted:                 24  5% 19%;
+    --muted-foreground:      28  6% 47%;    /* #78716c stone-500 warm mid-gray   */
+    --accent:                24  5% 22%;
+    --accent-foreground:     30  8% 91%;
+    --destructive:            4 65% 54%;
+    --destructive-foreground: 0  0% 100%;
+    --border:                24  5% 18%;    /* #292524 subtle warm border        */
+    --input:                 24  5% 18%;
+    --ring:                 245 80% 68%;
+    --sidebar-background:    24  6%  9%;    /* #171512 deepest layer             */
+    --sidebar-foreground:    30  6% 62%;
+    --sidebar-primary:      245 88% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:        24  5% 15%;
+    --sidebar-accent-foreground: 30 8% 91%;
+    --sidebar-border:        24  5% 14%;
+    --sidebar-ring:         245 88% 70%;
+
+    /* ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+       DARK — Option 2 (commented out)
+       Deep Slate  |  VS Code · Vercel style
+       bg: #0f1117  fg: #e2e8f0  sidebar: #0b0e14
+
+    --background:           222 18% 8%;
+    --foreground:           213 28% 88%;
+    --card:                 222 18% 11%;
+    --card-foreground:      213 28% 88%;
+    --card-hover:           222 18% 14%;
+    --popover:              222 18% 11%;
+    --popover-foreground:   213 28% 88%;
+    --primary:              213 28% 86%;
+    --primary-foreground:   222 18%  8%;
+    --secondary:            222 14% 16%;
+    --secondary-foreground: 213 18% 65%;
+    --muted:                222 14% 16%;
+    --muted-foreground:     215 14% 42%;
+    --accent:               222 14% 19%;
+    --accent-foreground:    213 28% 88%;
+    --destructive:            4 65% 54%;
+    --destructive-foreground: 0  0% 100%;
+    --border:               222 14% 16%;
+    --input:                222 14% 16%;
+    --ring:                 245 80% 68%;
+    --sidebar-background:   222 20%  6%;
+    --sidebar-foreground:   213 18% 58%;
+    --sidebar-primary:      245 88% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:       222 14% 13%;
+    --sidebar-accent-foreground: 213 28% 88%;
+    --sidebar-border:       222 14% 13%;
+    --sidebar-ring:         245 88% 70%;
+    ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+    /* ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ──
+       DARK — Option 3 (commented out)
+       GitHub Dimmed  |  GitHub dark dimmed style
+       bg: #22272e  fg: #adbac7  sidebar: #1c2128
+
+    --background:           212 12% 16%;
+    --foreground:           206 18% 73%;
+    --card:                 212 12% 19%;
+    --card-foreground:      206 18% 73%;
+    --card-hover:           212 12% 22%;
+    --popover:              212 12% 19%;
+    --popover-foreground:   206 18% 73%;
+    --primary:              206 18% 71%;
+    --primary-foreground:   212 12% 16%;
+    --secondary:            212 10% 23%;
+    --secondary-foreground: 206 12% 55%;
+    --muted:                212 10% 23%;
+    --muted-foreground:     210 10% 42%;
+    --accent:               212 10% 26%;
+    --accent-foreground:    206 18% 73%;
+    --destructive:            4 65% 54%;
+    --destructive-foreground: 0  0% 100%;
+    --border:               212 10% 22%;
+    --input:                212 10% 22%;
+    --ring:                 245 80% 68%;
+    --sidebar-background:   213 14% 13%;
+    --sidebar-foreground:   206 12% 58%;
+    --sidebar-primary:      245 88% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:       212 10% 19%;
+    --sidebar-accent-foreground: 206 18% 73%;
+    --sidebar-border:       212 10% 18%;
+    --sidebar-ring:         245 88% 70%;
+    ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── ── */
+
+    /* Indigo accent — slightly brighter for dark backgrounds */
+    --brand:              245 88% 70%;     /* #818cf8 indigo-400             */
+    --brand-foreground:     0  0% 100%;
+    --brand-muted:        245 50% 20%;
+    --brand-hover:        245 88% 75%;
+    --brand-glow:         245 88% 78%;
+
+    --note-red:    0 38% 17%;
+    --note-orange: 25 38% 17%;
+    --note-yellow: 45 38% 17%;
+    --note-green:  145 28% 15%;
+    --note-blue:   210 36% 17%;
+    --note-purple: 270 32% 17%;
+    --note-pink:   330 36% 17%;
+    --note-gray:   220  8% 16%;
+
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.30);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.40), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+    --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.45), 0 4px 6px -4px rgb(0 0 0 / 0.25);
+    --shadow-xl: 0 20px 32px -5px rgb(0 0 0 / 0.50), 0 8px 12px -6px rgb(0 0 0 / 0.30);
+
+    --bn-bg:     hsl(var(--background));
+    --bn-text:   hsl(var(--foreground));
+    --bn-muted:  hsl(var(--muted-foreground));
+    --bn-border: hsl(var(--border));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 99px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+
+  ::selection {
+    background: hsl(var(--brand) / 0.18);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in  { animation: fadeIn  0.18s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.22s ease-out forwards; }
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+
+code, pre, .font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ── BlockNote overrides ──────────────────────────────────────────────────── */
+.bn-container {
+  background-color: transparent;
+  color: var(--bn-text);
+}
+
+.bn-editor {
+  background-color: transparent !important;
+  color: var(--bn-text) !important;
+  font-size: 15px !important;
+  line-height: 1.8 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Headings inside the editor */
+.bn-editor h1 { font-size: 1.75rem !important; font-weight: 600 !important; line-height: 1.25 !important; letter-spacing: -0.02em  !important; margin-bottom: 0.25em !important; }
+.bn-editor h2 { font-size: 1.35rem !important; font-weight: 600 !important; line-height: 1.30 !important; letter-spacing: -0.015em !important; margin-bottom: 0.20em !important; }
+.bn-editor h3 { font-size: 1.1rem  !important; font-weight: 600 !important; line-height: 1.35 !important; letter-spacing: -0.01em  !important; margin-bottom: 0.15em !important; }
+
+.bn-editor ::selection {
+  background: hsl(var(--brand) / 0.20);
+}
+
+.bn-block {
+  caret-color: hsl(var(--brand));
+}
+
+.bn-content p {
+  color: var(--bn-text);
+}
+
+.bn-content .bn-placeholder {
+  color: var(--bn-muted);
+  opacity: 0.45;
+}

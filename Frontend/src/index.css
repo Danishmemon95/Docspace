@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,131 +6,179 @@
 
 @layer base {
   :root {
-    --background: 60 9% 98%;
-    --foreground: 240 10% 10%;
-
+    --background: 210 8% 98%;
+    --foreground: 210 10% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
-    --card-hover: 60 9% 97%;
-
+    --card-foreground: 210 10% 15%;
+    --card-hover: 210 8% 95%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
-
-    --primary: 240 5% 16%;
-    --primary-foreground: 60 9% 98%;
-
-    --secondary: 60 5% 94%;
-    --secondary-foreground: 240 5% 26%;
-
-    --muted: 60 5% 94%;
-    --muted-foreground: 240 4% 46%;
-
-    --accent: 60 5% 92%;
-    --accent-foreground: 240 5% 16%;
-
-    --destructive: 0 72% 51%;
+    --popover-foreground: 210 10% 15%;
+    --primary: 210 10% 15%;
+    --primary-foreground: 210 8% 98%;
+    --secondary: 210 8% 93%;
+    --secondary-foreground: 210 8% 38%;
+    --muted: 210 8% 93%;
+    --muted-foreground: 208 7% 46%;
+    --accent: 210 8% 90%;
+    --accent-foreground: 210 10% 15%;
+    --destructive: 4 70% 54%;
     --destructive-foreground: 0 0% 100%;
+    --border: 210 8% 88%;
+    --input: 210 8% 88%;
+    --ring: 245 60% 70%;
+    --sidebar-background: 210 9% 95%;
+    --sidebar-foreground: 210 8% 38%;
+    --sidebar-primary: 245 90% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 8% 90%;
+    --sidebar-accent-foreground: 210 10% 15%;
+    --sidebar-border: 210 8% 89%;
+    --sidebar-ring: 245 90% 64%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 240 5% 65%;
+
 
     --radius: 8px;
 
-    --brand: 220 70% 50%;
+    /* Indigo accent — shared across all light themes */
+    --brand: 245 90% 64%;
+    /* #6366f1                        */
     --brand-foreground: 0 0% 100%;
-    --brand-muted: 220 60% 95%;
-    --brand-hover: 220 70% 45%;
-    --brand-glow: 220 80% 60%;
+    --brand-muted: 245 80% 95%;
+    --brand-hover: 245 90% 58%;
+    --brand-glow: 245 90% 72%;
 
-    --note-red: 0 65% 95%;
-    --note-orange: 25 65% 95%;
-    --note-yellow: 45 65% 95%;
-    --note-green: 145 45% 94%;
-    --note-blue: 210 60% 95%;
-    --note-purple: 270 50% 95%;
-    --note-pink: 330 55% 95%;
+    --note-red: 0 60% 95%;
+    --note-orange: 25 60% 95%;
+    --note-yellow: 45 60% 95%;
+    --note-green: 145 40% 94%;
+    --note-blue: 210 55% 95%;
+    --note-purple: 270 45% 95%;
+    --note-pink: 330 50% 95%;
     --note-gray: 220 10% 94%;
 
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.03);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.03);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.06), 0 8px 10px -6px rgb(0 0 0 / 0.03);
-
-    --sidebar-background: 60 9% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 220 70% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 60 5% 94%;
-    --sidebar-accent-foreground: 240 5% 16%;
-    --sidebar-border: 240 6% 92%;
-    --sidebar-ring: 220 70% 50%;
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 20px 32px -5px rgb(0 0 0 / 0.09), 0 8px 12px -6px rgb(0 0 0 / 0.04);
 
     --bn-bg: hsl(var(--background));
     --bn-text: hsl(var(--foreground));
     --bn-muted: hsl(var(--muted-foreground));
     --bn-border: hsl(var(--border));
-
   }
 
   .dark {
-    --background: 240 10% 6%;
-    --foreground: 60 9% 96%;
+    /* Old Dark theme */
+    /* ── Dark — deep warm gray, not cold blue-black ── */
+    /* --background: 220 14% 11%;
+    --foreground: 36 15% 90%;
+    --card: 220 14% 14%;
+    --card-foreground: 36 15% 90%;
+    --card-hover: 220 14% 17%;
+    --popover: 220 14% 14%;
+    --popover-foreground: 36 15% 90%;
 
-    --card: 240 10% 8%;
-    --card-foreground: 60 9% 96%;
-    --card-hover: 240 10% 10%;
+    --primary: 36 15% 88%;
+    --primary-foreground: 220 14% 11%;
 
-    --popover: 240 10% 8%;
-    --popover-foreground: 60 9% 96%;
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 36 10% 72%;
 
-    --primary: 60 9% 96%;
-    --primary-foreground: 240 10% 6%;
+    --muted: 220 12% 18%;
+    --muted-foreground: 220 8% 55%;
 
-    --secondary: 240 8% 14%;
-    --secondary-foreground: 60 5% 80%;
+    --accent: 220 12% 20%;
+    --accent-foreground: 36 15% 90%;
 
-    --muted: 240 8% 14%;
-    --muted-foreground: 240 5% 55%;
-
-    --accent: 240 8% 16%;
-    --accent-foreground: 60 9% 96%;
-
-    --destructive: 0 72% 51%;
+    --destructive: 4 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 7% 15%;
-    --input: 240 7% 15%;
-    --ring: 220 70% 55%;
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --ring: 230 50% 60%;
 
-    --brand: 220 75% 60%;
+    --brand: 230 65% 65%;
     --brand-foreground: 0 0% 100%;
-    --brand-muted: 220 50% 15%;
-    --brand-hover: 220 75% 65%;
-    --brand-glow: 220 80% 70%;
+    --brand-muted: 230 40% 18%;
+    --brand-hover: 230 65% 70%;
+    --brand-glow: 230 70% 72%;
 
-    --note-red: 0 50% 20%;
-    --note-orange: 25 50% 20%;
-    --note-yellow: 45 50% 20%;
-    --note-green: 145 35% 18%;
-    --note-blue: 210 45% 20%;
-    --note-purple: 270 40% 20%;
-    --note-pink: 330 45% 20%;
-    --note-gray: 220 10% 18%;
+    --note-red: 0 40% 18%;
+    --note-orange: 25 40% 18%;
+    --note-yellow: 45 40% 18%;
+    --note-green: 145 30% 16%;
+    --note-blue: 210 38% 18%;
+    --note-purple: 270 35% 18%;
+    --note-pink: 330 38% 18%;
+    --note-gray: 220 10% 17%;
 
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.2);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.25);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 18px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.22);
+    --shadow-xl: 0 20px 30px -5px rgb(0 0 0 / 0.45), 0 8px 10px -6px rgb(0 0 0 / 0.28);
 
-    --sidebar-background: 240 10% 7%;
-    --sidebar-foreground: 60 5% 70%;
-    --sidebar-primary: 220 75% 60%;
+    --sidebar-background: 220 14% 9%;
+    --sidebar-foreground: 36 10% 65%;
+    --sidebar-primary: 230 65% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 8% 12%;
-    --sidebar-accent-foreground: 60 9% 96%;
-    --sidebar-border: 240 7% 12%;
-    --sidebar-ring: 220 75% 60%;
+    --sidebar-accent: 220 12% 15%;
+    --sidebar-accent-foreground: 36 15% 90%;
+    --sidebar-border: 220 12% 15%;
+    --sidebar-ring: 230 65% 65%;
+
+    --bn-bg: hsl(var(--background));
+    --bn-text: hsl(var(--foreground));
+    --bn-muted: hsl(var(--muted-foreground));
+    --bn-border: hsl(var(--border)); */
+
+    --background: 222 18% 8%;
+    --foreground: 213 28% 88%;
+    --card: 222 18% 11%;
+    --card-foreground: 213 28% 88%;
+    --card-hover: 222 18% 14%;
+    --popover: 222 18% 11%;
+    --popover-foreground: 213 28% 88%;
+    --primary: 213 28% 86%;
+    --primary-foreground: 222 18% 8%;
+    --secondary: 222 14% 16%;
+    --secondary-foreground: 213 18% 65%;
+    --muted: 222 14% 16%;
+    --muted-foreground: 215 14% 42%;
+    --accent: 222 14% 19%;
+    --accent-foreground: 213 28% 88%;
+    --destructive: 4 65% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 14% 16%;
+    --input: 222 14% 16%;
+    --ring: 245 80% 68%;
+    --sidebar-background: 222 20% 6%;
+    --sidebar-foreground: 213 18% 58%;
+    --sidebar-primary: 245 88% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 14% 13%;
+    --sidebar-accent-foreground: 213 28% 88%;
+    --sidebar-border: 222 14% 13%;
+    --sidebar-ring: 245 88% 70%;
+
+    --brand: 245 88% 70%;
+    --brand-foreground: 0 0% 100%;
+    --brand-muted: 245 50% 20%;
+    --brand-hover: 245 88% 75%;
+    --brand-glow: 245 88% 78%;
+
+    --note-red: 0 38% 17%;
+    --note-orange: 25 38% 17%;
+    --note-yellow: 45 38% 17%;
+    --note-green: 145 28% 15%;
+    --note-blue: 210 36% 17%;
+    --note-purple: 270 32% 17%;
+    --note-pink: 330 36% 17%;
+    --note-gray: 220 8% 16%;
+
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.30);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.40), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+    --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.45), 0 4px 6px -4px rgb(0 0 0 / 0.25);
+    --shadow-xl: 0 20px 32px -5px rgb(0 0 0 / 0.50), 0 8px 12px -6px rgb(0 0 0 / 0.30);
 
     --bn-bg: hsl(var(--background));
     --bn-text: hsl(var(--foreground));
@@ -146,8 +194,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-size: 15px;
+    line-height: 1.6;
   }
 
   h1,
@@ -162,7 +212,7 @@
 
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -171,11 +221,15 @@
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
-    border-radius: 3px;
+    border-radius: 99px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
   }
 
   ::selection {
-    background: hsl(var(--brand) / 0.15);
+    background: hsl(var(--brand) / 0.18);
   }
 }
 
@@ -192,7 +246,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 
   to {
@@ -202,11 +256,11 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.18s ease-out forwards;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.25s ease-out forwards;
+  animation: slideUp 0.22s ease-out forwards;
 }
 
 .stagger-1 {
@@ -223,37 +277,67 @@ pre,
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-@keyframes titleUnderlinePulse {
-
-  0%,
-  100% {
-    opacity: 1;
-    box-shadow: 0 0 8px hsl(var(--brand) / 0.4);
-  }
-
-  50% {
-    opacity: 0.8;
-    box-shadow: 0 0 12px hsl(var(--brand) / 0.6);
-  }
-}
-
-.title-focus-underline {
-  background: hsl(var(--brand));
-  animation: titleUnderlinePulse 2s ease-in-out infinite;
-}
-
+/* ── BlockNote editor overrides ─────────────────────────────────────────── */
 .bn-container {
-  background-color: var(--bn-bg);
+  background-color: transparent;
   color: var(--bn-text);
 }
 
 .bn-editor {
   background-color: transparent !important;
-  color: var(--bn-text) !important  ;
+  color: var(--bn-text) !important;
+
+  /* Comfortable reading typography inside the editor */
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Headings inside BlockNote */
+.bn-editor h1 {
+  font-size: 2.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.bn-editor h2 {
+  font-size: 2.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.bn-editor h3 {
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.bn-editor h4 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  letter-spacing: -0.005em !important;
+}
+
+.bn-editor h5 {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+}
+
+.bn-editor h6 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0em !important;
 }
 
 .bn-editor ::selection {
-  background: hsl(var(--primary) / 0.25);
+  background: hsl(var(--brand) / 0.2);
 }
 
 .bn-block {
@@ -266,4 +350,5 @@ pre,
 
 .bn-content .bn-placeholder {
   color: var(--bn-muted);
+  opacity: 0.55;
 }
