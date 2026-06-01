@@ -43,7 +43,7 @@ export function SidebarCategoryItem({ category, isDraggingNote }: SidebarCategor
   const { deleteCategory, getCategory, setDefaultCategory } = useCategoryStore()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

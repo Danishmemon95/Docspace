@@ -21,7 +21,7 @@ import {
 } from '@dnd-kit/sortable';
 import {
   PanelLeftClose, PanelLeft, Plus, Settings,
-  Pin, Inbox, Sparkles, FileText,
+  Pin, Inbox, Sparkles, FileText, Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/newAuthStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -29,6 +29,7 @@ import { Button } from '../ui/button';
 import { cn } from '../../libs/utils';
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { SidebarCategoryItem } from '../sidebar/SidebarCategoryItem';
+import { SidebarNoteItem } from '../sidebar/SidebarNoteItem';
 import { AddCategoryDialog } from '../categories/AddCategoryDialog';
 import { SettingsDialog } from '../settings/SettingsDialog';
 import { useCategoryStore } from '../../stores/categoryStore';
@@ -52,13 +53,15 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
   const {
     sidebarCollapsed, toggleSidebar,
     selectedCategoryId, setSelectedCategory,
-    moveNote, reorderNotes,
+    moveNote, reorderNotes, getPinnedNotes, pinnedNotes, getDeletedNotes, deletedNotes,
   } = useNotesStore();
 
   const { authUser: user } = useAuthStore();
   const { categories, getCategory, reorderCategories } = useCategoryStore();
 
   useEffect(() => { getCategory(); }, [getCategory]);
+  useEffect(() => { getPinnedNotes(); }, [getPinnedNotes]);
+  useEffect(() => { getDeletedNotes(); }, [getDeletedNotes]);
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -86,7 +89,6 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
   );
 
   const allNotes = localCategories.flatMap((c) => c.notes ?? []);
-  const pinnedCount = allNotes.filter((n) => n.pinned).length;
 
   // ─── Drag Start ────────────────────────────────────────────────────────────
   const handleDragStart = (event: DragStartEvent) => {
@@ -234,7 +236,8 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
 
   const quickFilters = [
     { id: null, label: 'All Notes', icon: Inbox, count: allNotes.length },
-    { id: 'pinned', label: 'Pinned', icon: Pin, count: pinnedCount },
+    { id: 'pinned', label: 'Pinned', icon: Pin, count: pinnedNotes.length },
+    { id: 'deleted', label: 'Deleted', icon: Trash2, count: deletedNotes.length },
   ];
 
   return (
@@ -314,48 +317,82 @@ export function Sidebar({ forceMobile }: SidebarProps = {}) {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-3">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={collisionDetection}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={localCategories.map((c) => c._id)}
-              strategy={verticalListSortingStrategy}
-              disabled={dragType === 'note'}
-            >
-              <div className="space-y-0.5">
-                {localCategories.map((category) => (
-                  <SidebarCategoryItem
-                    key={category._id}
-                    category={category}
-                    isDraggingNote={dragType === 'note'}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-
-            <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
-              {activeNote && (
-                <div className="flex items-center gap-2 px-3 py-1.5 ml-8 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm shadow-lg border border-border opacity-95">
-                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{activeNote.title || 'Untitled'}</span>
+          {selectedCategoryId === 'pinned' ? (
+            <div className="space-y-2">
+              {pinnedNotes.length > 0 ? (
+                pinnedNotes.map((note) => (
+                  <SidebarNoteItem key={note._id} note={note} isPinnedView={true} />
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No pinned notes yet</p>
+                  <p className="text-xs text-muted-foreground/80 mt-2">
+                    Pin notes from the editor to keep them handy.
+                  </p>
                 </div>
               )}
-            </DragOverlay>
-          </DndContext>
-
-          {localCategories.length === 0 && (
-            <div className="px-4 py-8 text-center">
-              <p className="text-sm text-muted-foreground">No categories yet</p>
-              <Button variant="ghost" size="sm" onClick={() => setAddCategoryOpen(true)}
-                className="mt-2 text-primary hover:text-primary hover:bg-primary/10">
-                <Plus className="w-4 h-4 mr-1" />
-                Create category
-              </Button>
             </div>
+          ) : selectedCategoryId === 'deleted' ? (
+            <div className="space-y-2">
+              {deletedNotes.length > 0 ? (
+                deletedNotes.map((note) => (
+                  <SidebarNoteItem key={note._id} note={note} isDeletedView={true} />
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No deleted notes</p>
+                  <p className="text-xs text-muted-foreground/80 mt-2">
+                    Deleted notes will appear here.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={collisionDetection}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={localCategories.map((c) => c._id)}
+                  strategy={verticalListSortingStrategy}
+                  disabled={dragType === 'note'}
+                >
+                  <div className="space-y-0.5">
+                    {localCategories.map((category) => (
+                      <SidebarCategoryItem
+                        key={category._id}
+                        category={category}
+                        isDraggingNote={dragType === 'note'}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+
+                <DragOverlay dropAnimation={{ duration: 150, easing: 'ease' }}>
+                  {activeNote && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 ml-8 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm shadow-lg border border-border opacity-95">
+                      <FileText className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{activeNote.title || 'Untitled'}</span>
+                    </div>
+                  )}
+                </DragOverlay>
+              </DndContext>
+
+              {localCategories.length === 0 && (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No categories yet</p>
+                  <Button variant="ghost" size="sm" onClick={() => setAddCategoryOpen(true)}
+                    className="mt-2 text-primary hover:text-primary hover:bg-primary/10">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Create category
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

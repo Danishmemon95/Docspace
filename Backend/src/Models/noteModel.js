@@ -25,6 +25,10 @@ const noteSchema = new mongoose.Schema({
         required: true,
         default: 0,
     },
+    pinned: {
+        type: Boolean,
+        default: false,
+    },
     deleted_at: {
         type: Date,
         default: null,

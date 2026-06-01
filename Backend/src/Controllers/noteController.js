@@ -41,6 +41,7 @@ const createNote = async (req, res) => {
             categoryId,
             content: content || [],
             order: newOrder,
+            pinned: false,
         })
 
         res.status(201).json({ success: true, message: "Note created successfully", data: note });
@@ -53,7 +54,7 @@ const createNote = async (req, res) => {
 
 const updateNote = async (req, res) => {
     try {
-        const { title, content } = req.body;
+        const { title, content, pinned } = req.body;
 
         const note = await Note.findOne({ _id: req.params.id, userId: req.user._id });
         if (!note) {
@@ -70,6 +71,10 @@ const updateNote = async (req, res) => {
         if (content !== undefined) {
             note.content = content;
             note.markModified('content');
+        }
+
+        if (pinned !== undefined) {
+            note.pinned = pinned;
         }
 
         note.updatedAt = Date.now();
@@ -197,4 +202,67 @@ const reorderNotes = async (req, res) => {
     }
 }
 
-export { getNoteById, createNote, updateNote, deleteNote, duplicateNote, moveNote, reorderNotes };
+const togglePinNote = async (req, res) => {
+    try {
+        const note = await Note.findOne({ _id: req.params.id, userId: req.user._id });
+        if (!note) {
+            return res.status(404).json({ success: false, message: "Note not found" });
+        }
+        note.pinned = !note.pinned;
+        note.updatedAt = Date.now();
+        await note.save();
+        res.status(200).json({ success: true, message: `Note ${note.pinned ? "pinned" : "unpinned"} successfully`, data: note });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+};
+
+const getPinnedNotes = async (req, res) => {
+    try {
+        const pinnedNotes = await Note.find({
+            userId: req.user._id,
+            pinned: true,
+            deleted_at: null
+        }).sort({ updatedAt: -1 });
+
+        res.status(200).json({ success: true, data: pinnedNotes });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+};
+
+const getDeletedNotes = async (req, res) => {
+    try {
+        const deletedNotes = await Note.find({
+            userId: req.user._id,
+            deleted_at: { $ne: null }
+        }).sort({ deletedAt: -1 });
+
+        res.status(200).json({ success: true, data: deletedNotes });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+};
+
+const restoreNote = async (req, res) => {
+    try {
+        const note = await Note.findOne({ _id: req.params.id, userId: req.user._id });
+        if (!note) {
+            return res.status(404).json({ success: false, message: "Note not found" });
+        }
+
+        note.deleted_at = null;
+        note.updatedAt = Date.now();
+        await note.save();
+
+        res.status(200).json({ success: true, message: "Note restored successfully", data: note });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    }
+};
+
+export { getNoteById, createNote, updateNote, deleteNote, duplicateNote, moveNote, reorderNotes, togglePinNote, getPinnedNotes, getDeletedNotes, restoreNote };

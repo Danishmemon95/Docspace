@@ -17,7 +17,7 @@ import { NoteEditorSkeleton } from './NoteEditorSkeleton';
 
 export function NoteEditor() {
   const { categories } = useCategoryStore();
-  const { selectedNoteId, updateNote, duplicateNote, getById, noteById, isLoadingNote } = useNotesStore();
+  const { selectedNoteId, updateNote, duplicateNote, getById, noteById, isLoadingNote, togglePin } = useNotesStore();
 
   const [title, setTitle] = useState('');
   const [isTitleFocused, setIsTitleFocused] = useState(false);
@@ -114,6 +114,11 @@ export function NoteEditor() {
       duplicateNote(selectedNoteId);
     }
   }, [selectedNoteId, duplicateNote]);
+
+  const handleTogglePin = useCallback(async () => {
+    if (!selectedNoteId || !selectedNote) return;
+    await togglePin(selectedNoteId);
+  }, [selectedNoteId, selectedNote, togglePin]);
 
   useEffect(() => {
     if (selectedNote) {
@@ -218,6 +223,7 @@ export function NoteEditor() {
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
               title={selectedNote.pinned ? 'Unpin' : 'Pin'}
+              onClick={handleTogglePin}
             >
               {selectedNote.pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
             </Button>

@@ -29,14 +29,22 @@ interface NoteStore {
   selectedCategoryId: string | null;
   noteById: Note | null;
   isLoadingNote: boolean;
+  pinnedNotes: Note[];
+  isLoadingPinnedNotes: boolean;
+  deletedNotes: Note[];
+  isLoadingDeletedNotes: boolean;
 
   createNote: (name: string, categoryId: string) => Promise<{ success: boolean; error?: string }>;
   getById: (id: string) => Promise<void>;
   updateNote: (id: string, content: any, title: string) => Promise<{ success: boolean; error?: string }>;
   deleteNote: (id: string) => Promise<{ success: boolean; error?: string }>;
   duplicateNote: (id: string) => Promise<{ success: boolean; error?: string }>;
+  togglePin: (noteId: string) => Promise<{ success: boolean; error?: string }>;
   moveNote: (noteId: string, newCategoryId: string) => Promise<{ success: boolean; error?: string }>;
   reorderNotes: (orderedNotes: { _id: string; order: number }[], categoryId: string, optimisticNotes: Note[]) => Promise<{ success: boolean; error?: string }>;
+  getPinnedNotes: () => Promise<void>;
+  getDeletedNotes: () => Promise<void>;
+  restoreNote: (noteId: string) => Promise<{ success: boolean; error?: string }>;
 
   setSelectedNote: (id: string | null) => void;
   setSelectedCategory: (id: string | null) => void;
@@ -55,6 +63,10 @@ export const useNotesStore = create<NoteStore>()(
     selectedCategoryId: null,
     noteById: null,
     isLoadingNote: false,
+    pinnedNotes: [],
+    isLoadingPinnedNotes: false,
+    deletedNotes: [],
+    isLoadingDeletedNotes: false,
 
     createNote: async (name: string, categoryId: string) => {
       try {
@@ -107,8 +119,11 @@ export const useNotesStore = create<NoteStore>()(
       try {
         await axiosInstance.delete(`/note/${id}`);
         getCategorySync().syncDeleteNote(id);
+        // Refresh deleted notes list
+        const deletedRes = await axiosInstance.get("/note/deleted/list");
         set((state: NoteStore) => ({
           selectedNoteId: state.selectedNoteId === id ? null : state.selectedNoteId,
+          deletedNotes: deletedRes.data.data,
         }));
         return { success: true };
       } catch (error: any) {
@@ -129,6 +144,27 @@ export const useNotesStore = create<NoteStore>()(
       } catch (error: any) {
         toast({
           title: "Duplicate note failed",
+          description: error.response?.data?.message || error.message,
+        });
+        return { success: false, error: error.response?.data?.message || error.message };
+      }
+    },
+
+    togglePin: async (noteId: string) => {
+      try {
+        const res = await axiosInstance.put(`/note/${noteId}/toggle-pin`);
+        const updatedNote: Note = res.data.data;
+        getCategorySync().syncUpdateNote(updatedNote);
+        set((state: NoteStore) => ({
+          noteById: state.noteById && state.noteById._id === updatedNote._id ? updatedNote : state.noteById,
+          pinnedNotes: updatedNote.pinned
+            ? [updatedNote, ...state.pinnedNotes.filter(n => n._id !== updatedNote._id)]
+            : state.pinnedNotes.filter(n => n._id !== updatedNote._id),
+        }));
+        return { success: true };
+      } catch (error: any) {
+        toast({
+          title: "Pin update failed",
           description: error.response?.data?.message || error.message,
         });
         return { success: false, error: error.response?.data?.message || error.message };
@@ -169,6 +205,58 @@ export const useNotesStore = create<NoteStore>()(
         getCategorySync().getCategory();
         toast({
           title: "Reorder failed",
+          description: error.response?.data?.message || error.message,
+        });
+        return { success: false, error: error.response?.data?.message || error.message };
+      }
+    },
+
+    getPinnedNotes: async () => {
+      set({ isLoadingPinnedNotes: true });
+      try {
+        const res = await axiosInstance.get("/note/pinned/list");
+        set({ pinnedNotes: res.data.data });
+      } catch (error: any) {
+        toast({
+          title: "Failed to fetch pinned notes",
+          description: error.response?.data?.message || error.message,
+        });
+      } finally {
+        set({ isLoadingPinnedNotes: false });
+      }
+    },
+
+    getDeletedNotes: async () => {
+      set({ isLoadingDeletedNotes: true });
+      try {
+        const res = await axiosInstance.get("/note/deleted/list");
+        set({ deletedNotes: res.data.data });
+      } catch (error: any) {
+        toast({
+          title: "Failed to fetch deleted notes",
+          description: error.response?.data?.message || error.message,
+        });
+      } finally {
+        set({ isLoadingDeletedNotes: false });
+      }
+    },
+
+    restoreNote: async (noteId: string) => {
+      try {
+        const res = await axiosInstance.put(`/note/${noteId}/restore`);
+        const restoredNote: Note = res.data.data;
+        getCategorySync().syncAddNote(restoredNote);
+        set((state: NoteStore) => ({
+          deletedNotes: state.deletedNotes.filter(n => n._id !== noteId),
+        }));
+        toast({
+          title: "Note restored",
+          description: "Note has been restored successfully",
+        });
+        return { success: true };
+      } catch (error: any) {
+        toast({
+          title: "Restore note failed",
           description: error.response?.data?.message || error.message,
         });
         return { success: false, error: error.response?.data?.message || error.message };
